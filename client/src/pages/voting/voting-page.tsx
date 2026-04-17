@@ -65,13 +65,13 @@ export function VotingPage() {
           <section
             ref={setPoolRef}
             className={cn(
-              'mt-4 rounded-4xl border border-border/90 bg-card/30 p-3 transition-all sm:p-4',
+              'mt-4 rounded-lg border border-border/90 p-3 transition-all sm:p-4',
               isPoolOver && 'border-primary/45 ring-2 ring-ring/45',
             )}
           >
-            <div className="flex flex-wrap gap-2 sm:gap-3">
+            <div className="flex flex-wrap flex-row items-center gap-6">
               {pool.map((driver) => (
-                <DriverCard key={driver.id} entity={driver} source="POOL" className="w-22 sm:w-24" />
+                <DriverCard key={driver.id} entity={driver} source="POOL" className="w-fit" />
               ))}
             </div>
           </section>

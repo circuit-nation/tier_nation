@@ -12,9 +12,6 @@ type DriverCardProps = {
   className?: string
 }
 
-const getAvatarUrl = (entity: Entity) =>
-  entity.imageUrl ?? `https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(entity.name)}`
-
 export function DriverCard({ entity, source, draggable = true, className }: DriverCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: entity.id,
@@ -24,8 +21,8 @@ export function DriverCard({ entity, source, draggable = true, className }: Driv
 
   const style: CSSProperties | undefined = transform
     ? {
-        transform: CSS.Translate.toString(transform),
-      }
+      transform: CSS.Translate.toString(transform),
+    }
     : undefined
 
   return (
@@ -34,7 +31,7 @@ export function DriverCard({ entity, source, draggable = true, className }: Driv
       type="button"
       style={style}
       className={cn(
-        'group flex w-full flex-col items-center gap-2 text-center transition-all rounded-md p-0.5',
+        'group flex w-full flex-col items-center gap-2 text-center transition-all rounded-md',
         'hover:bg-accent/20',
         isDragging && 'z-20 scale-[1.01] border-primary/55 bg-card shadow-lg ring-2 ring-ring/40',
         className,
@@ -42,10 +39,9 @@ export function DriverCard({ entity, source, draggable = true, className }: Driv
       {...attributes}
       {...listeners}
     >
-      <div className="size-14 overflow-hidden rounded-sm border border-border/80 bg-background/40 sm:size-18">
-        <img src={getAvatarUrl(entity)} alt={entity.name} className="h-full w-full object-cover" loading="lazy" />
+      <div className="size-28 flex items-center justify-center overflow-hidden rounded-sm border border-border/80">
+        <p className="line-clamp-2 text-xs font-semibold leading-tight tracking-wide text-foreground">{entity.name}</p>
       </div>
-      <p className="line-clamp-2 min-h-7 text-[0.68rem] font-semibold leading-tight tracking-wide text-foreground">{entity.name}</p>
     </button>
   )
 }
