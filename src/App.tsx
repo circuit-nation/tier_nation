@@ -1,4 +1,5 @@
 import './App.css'
+import { Button } from './components/ui/button'
 
 function App() {
   return (
@@ -7,6 +8,9 @@ function App() {
         <p className='text-red-500'>
           tier nation
         </p>
+        <Button>
+          Hello world
+        </Button>
       </section>
     </>
   )
