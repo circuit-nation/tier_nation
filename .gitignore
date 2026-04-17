@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+.vite
+coverage.out
+*.test
+server/bin/
 
 # Editor directories and files
 .vscode/*
