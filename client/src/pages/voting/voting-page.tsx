@@ -1,4 +1,3 @@
-import { DndContext, DragOverlay, closestCenter, useDroppable, type DragStartEvent } from '@dnd-kit/core'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 
@@ -11,28 +10,13 @@ import { TierBoard } from '@/pages/voting/components/tier-board'
 
 export function VotingPage() {
   const { listId } = useParams()
-  const [activeEntityId, setActiveEntityId] = useState<string | null>(null)
   const [submitMessage, setSubmitMessage] = useState('')
 
   const { list, tiers, board, pool, entitiesById, selectedCount, totalCount, hasVotes, moveEntity, resetBoard, buildVotePayload } =
     useVoting(listId)
 
-  const { sensors, onDragEnd } = useDragDrop(moveEntity)
-
-  const { setNodeRef: setPoolRef, isOver: isPoolOver } = useDroppable({
-    id: 'pool-drop',
-  })
-
-  const activeEntity = activeEntityId ? entitiesById[activeEntityId] : undefined
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveEntityId(String(event.active.id))
-  }
-
-  const handleDragEnd = (event: Parameters<typeof onDragEnd>[0]) => {
-    onDragEnd(event)
-    setActiveEntityId(null)
-  }
+  const { activeEntityId, overDestination, draggableProps, dropzoneProps } = useDragDrop(moveEntity)
+  const isPoolOver = overDestination === 'POOL'
 
   const handleSubmit = () => {
     const payload = buildVotePayload('mock-user')
@@ -47,54 +31,57 @@ export function VotingPage() {
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragCancel={() => setActiveEntityId(null)}
-    >
-      <div className="space-y-4">
-        <section className="">
-          <div className="mb-4">
-            <p className="text-sm font-semibold tracking-[0.18em] text-foreground sm:text-base">{list.name}</p>
-          </div>
+    <div className="space-y-4">
+      <section className="">
+        <div className="mb-4">
+          <p className="text-sm font-semibold tracking-[0.18em] text-foreground sm:text-base">{list.name}</p>
+        </div>
 
-          <TierBoard tiers={tiers} board={board} entitiesById={entitiesById} />
+        <TierBoard
+          tiers={tiers}
+          board={board}
+          entitiesById={entitiesById}
+          draggableProps={draggableProps}
+          dropzoneProps={dropzoneProps}
+          activeEntityId={activeEntityId}
+          overDestination={overDestination}
+        />
 
-          <section
-            ref={setPoolRef}
-            className={cn(
-              'mt-4 rounded-lg border border-border/90 p-3 transition-all sm:p-4',
-              isPoolOver && 'border-primary/45 ring-2 ring-ring/45',
-            )}
-          >
-            <div className="flex flex-wrap flex-row items-center gap-6">
-              {pool.map((driver) => (
-                <DriverCard key={driver.id} entity={driver} source="POOL" className="w-fit" />
-              ))}
-            </div>
-          </section>
-
-          <div className="mt-4 flex justify-end">
-            <SubmitBar
-              selectedCount={selectedCount}
-              totalCount={totalCount}
-              disabled={!hasVotes}
-              onSubmit={handleSubmit}
-              onReset={resetBoard}
-            />
+        <section
+          data-destination="POOL"
+          {...dropzoneProps}
+          className={cn(
+            'mt-4 rounded-lg border border-border/90 p-3 transition-all sm:p-4',
+            isPoolOver && 'border-primary/45 ring-2 ring-ring/45',
+          )}
+        >
+          <div className="flex flex-wrap flex-row items-center gap-6">
+            {pool.map((driver) => (
+              <DriverCard
+                key={driver.id}
+                entity={driver}
+                className="w-fit"
+                dragProps={draggableProps}
+                isDragging={activeEntityId === driver.id}
+              />
+            ))}
           </div>
         </section>
 
-        {submitMessage ? (
-          <p className="rounded-xl border border-primary/35 bg-primary/12 px-3 py-2 text-xs font-medium text-primary">{submitMessage}</p>
-        ) : null}
-      </div>
+        <div className="mt-4 flex justify-end">
+          <SubmitBar
+            selectedCount={selectedCount}
+            totalCount={totalCount}
+            disabled={!hasVotes}
+            onSubmit={handleSubmit}
+            onReset={resetBoard}
+          />
+        </div>
+      </section>
 
-      <DragOverlay>
-        {activeEntity ? <DriverCard entity={activeEntity} source="POOL" draggable={false} className="w-24" /> : null}
-      </DragOverlay>
-    </DndContext>
+      {submitMessage ? (
+        <p className="rounded-xl border border-primary/35 bg-primary/12 px-3 py-2 text-xs font-medium text-primary">{submitMessage}</p>
+      ) : null}
+    </div>
   )
 }

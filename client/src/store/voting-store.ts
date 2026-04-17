@@ -27,14 +27,27 @@ export const useVotingStore = create<VotingStore>((set, get) => ({
 
   moveEntity: (entityId, toTier) =>
     set((state) => {
-      const nextBoard = cloneBoard(state.board)
+      let currentTier: TierValue | null = null
 
       for (const tier of TIER_VALUES) {
-        nextBoard[tier] = nextBoard[tier].filter((id) => id !== entityId)
+        if (state.board[tier].includes(entityId)) {
+          currentTier = tier
+          break
+        }
+      }
+
+      if (currentTier === toTier || (currentTier === null && toTier === 'POOL')) {
+        return state
+      }
+
+      const nextBoard = cloneBoard(state.board)
+
+      if (currentTier) {
+        nextBoard[currentTier] = nextBoard[currentTier].filter((id) => id !== entityId)
       }
 
       if (toTier !== 'POOL' && !nextBoard[toTier].includes(entityId)) {
-        nextBoard[toTier].push(entityId)
+        nextBoard[toTier] = [...nextBoard[toTier], entityId]
       }
 
       return { board: nextBoard }
