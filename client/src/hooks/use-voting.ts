@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 
+import { MIN_SUBMIT_DRIVER_RATIO } from '@/lib/constants'
 import { drivers } from '@/lib/mock/drivers'
 import { f1List, votingLists } from '@/lib/mock/lists'
 import { useVotingStore, type BoardDestination } from '@/store/voting-store'
@@ -39,7 +40,12 @@ export function useVoting(listId?: string) {
     return TIER_VALUES.reduce((count, tier) => count + board[tier].length, 0)
   }, [board])
 
+  const minimumRequiredCount = useMemo(() => {
+    return Math.ceil(drivers.length * MIN_SUBMIT_DRIVER_RATIO)
+  }, [])
+
   const hasVotes = selectedCount > 0
+  const canSubmit = selectedCount >= minimumRequiredCount
 
   const buildVotePayload = (userId: string): Vote[] => {
     const createdAt = new Date().toISOString()
@@ -64,7 +70,9 @@ export function useVoting(listId?: string) {
     entitiesById: entityLookup,
     selectedCount,
     totalCount: drivers.length,
+    minimumRequiredCount,
     hasVotes,
+    canSubmit,
     moveEntity: (entityId: string, toTier: BoardDestination) => moveEntity(entityId, toTier),
     resetBoard,
     buildVotePayload,

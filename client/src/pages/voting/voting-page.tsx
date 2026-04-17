@@ -12,13 +12,31 @@ export function VotingPage() {
   const { listId } = useParams()
   const [submitMessage, setSubmitMessage] = useState('')
 
-  const { list, tiers, board, pool, entitiesById, selectedCount, totalCount, hasVotes, moveEntity, resetBoard, buildVotePayload } =
+  const {
+    list,
+    tiers,
+    board,
+    pool,
+    entitiesById,
+    selectedCount,
+    totalCount,
+    minimumRequiredCount,
+    canSubmit,
+    moveEntity,
+    resetBoard,
+    buildVotePayload,
+  } =
     useVoting(listId)
 
   const { activeEntityId, overDestination, draggableProps, dropzoneProps } = useDragDrop(moveEntity)
   const isPoolOver = overDestination === 'POOL'
 
   const handleSubmit = () => {
+    if (!canSubmit) {
+      setSubmitMessage(`Add at least ${minimumRequiredCount} drivers before submitting.`)
+      return
+    }
+
     const payload = buildVotePayload('mock-user')
     console.log('Mock POST /vote payload', payload)
 
@@ -72,7 +90,8 @@ export function VotingPage() {
           <SubmitBar
             selectedCount={selectedCount}
             totalCount={totalCount}
-            disabled={!hasVotes}
+            minimumRequiredCount={minimumRequiredCount}
+            disabled={!canSubmit}
             onSubmit={handleSubmit}
             onReset={resetBoard}
           />
