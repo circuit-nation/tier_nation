@@ -24,7 +24,7 @@ export function DriverCard({ entity, className, isDragging = false, dragProps }:
       )}
       {...dragProps}
     >
-      <div className="size-24 p-2 flex items-center justify-center overflow-hidden rounded-sm border border-border/80">
+      <div className={`size-12 sm:size-16 md:size-20 p-2 flex items-center justify-center overflow-hidden rounded-sm border border-border/80`}>
         <p className="line-clamp-2 text-xs font-semibold leading-tight tracking-wide text-foreground">{entity.name}</p>
       </div>
     </button>

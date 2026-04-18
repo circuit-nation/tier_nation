@@ -15,26 +15,24 @@ type TierBoardProps = {
 
 export function TierBoard({ tiers, board, entitiesById, draggableProps, dropzoneProps, activeEntityId, overDestination }: TierBoardProps) {
   return (
-    <div className="">
-      <div className="space-y-2">
-        {tiers.map((tier) => {
-          const entities = board[tier.value]
-            .map((id) => entitiesById[id])
-            .filter((entity): entity is Entity => Boolean(entity))
+    <div className="space-y-2">
+      {tiers.map((tier) => {
+        const entities = board[tier.value]
+          .map((id) => entitiesById[id])
+          .filter((entity): entity is Entity => Boolean(entity))
 
-          return (
-            <TierRow
-              key={tier.value}
-              tier={tier}
-              entities={entities}
-              draggableProps={draggableProps}
-              dropzoneProps={dropzoneProps}
-              activeEntityId={activeEntityId}
-              isOver={overDestination === tier.value}
-            />
-          )
-        })}
-      </div>
+        return (
+          <TierRow
+            key={tier.value}
+            tier={tier}
+            entities={entities}
+            draggableProps={draggableProps}
+            dropzoneProps={dropzoneProps}
+            activeEntityId={activeEntityId}
+            isOver={overDestination === tier.value}
+          />
+        )
+      })}
     </div>
   )
 }

@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom'
 import { useDragDrop } from '@/hooks/use-drag-drop'
 import { useVoting } from '@/hooks/use-voting'
 import { cn } from '@/lib/utils'
-import { DriverCard } from '@/pages/voting/components/driver-card'
+import { DriverCard } from '@/pages/voting/components/entity-card'
 import { SubmitBar } from '@/pages/voting/components/submit-bar'
 import { TierBoard } from '@/pages/voting/components/tier-board'
 

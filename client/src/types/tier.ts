@@ -1,4 +1,4 @@
-export const TIER_VALUES = ['S', 'A', 'B', 'C', 'D', 'E'] as const
+export const TIER_VALUES = ['S', 'A', 'B', 'C', 'D', 'E', 'F'] as const
 
 export type TierValue = (typeof TIER_VALUES)[number]
 
