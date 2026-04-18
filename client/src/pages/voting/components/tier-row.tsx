@@ -1,7 +1,7 @@
 import type { NativeDraggableProps, NativeDropzoneProps } from '@/hooks/use-drag-drop'
 import { TIER_ACCENT_BY_VALUE } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-import { DriverCard } from '@/pages/voting/components/entity-card'
+import { EntityCard } from '@/pages/voting/components/entity-card'
 import type { Entity, Tier } from '@/types'
 
 type TierRowProps = {
@@ -42,7 +42,7 @@ export function TierRow({ tier, entities, draggableProps, dropzoneProps, activeE
         )}>
           <div className="flex flex-wrap gap-2">
             {entities.map((entity) => (
-              <DriverCard
+              <EntityCard
                 key={entity.id}
                 entity={entity}
                 className="w-22 sm:w-24"

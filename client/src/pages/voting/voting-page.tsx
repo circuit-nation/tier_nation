@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom'
 import { useDragDrop } from '@/hooks/use-drag-drop'
 import { useVoting } from '@/hooks/use-voting'
 import { cn } from '@/lib/utils'
-import { DriverCard } from '@/pages/voting/components/entity-card'
+import { EntityCard } from '@/pages/voting/components/entity-card'
 import { SubmitBar } from '@/pages/voting/components/submit-bar'
 import { TierBoard } from '@/pages/voting/components/tier-board'
 
@@ -33,7 +33,7 @@ export function VotingPage() {
 
   const handleSubmit = () => {
     if (!canSubmit) {
-      setSubmitMessage(`Add at least ${minimumRequiredCount} drivers before submitting.`)
+      setSubmitMessage(`Add at least ${minimumRequiredCount} entities before submitting.`)
       return
     }
 
@@ -74,13 +74,13 @@ export function VotingPage() {
           )}
         >
           <div className="flex flex-wrap flex-row items-center gap-6">
-            {pool.map((driver) => (
-              <DriverCard
-                key={driver.id}
-                entity={driver}
+            {pool.map((entity) => (
+              <EntityCard
+                key={entity.id}
+                entity={entity}
                 className="w-fit"
                 dragProps={draggableProps}
-                isDragging={activeEntityId === driver.id}
+                isDragging={activeEntityId === entity.id}
               />
             ))}
           </div>

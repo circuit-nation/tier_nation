@@ -3,14 +3,14 @@ import type { ButtonHTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 import type { Entity } from '@/types'
 
-type DriverCardProps = {
+type EntityCardProps = {
   entity: Entity
   className?: string
   isDragging?: boolean
   dragProps?: Pick<ButtonHTMLAttributes<HTMLButtonElement>, 'draggable' | 'onDragStart' | 'onDragEnd'>
 }
 
-export function DriverCard({ entity, className, isDragging = false, dragProps }: DriverCardProps) {
+export function EntityCard({ entity, className, isDragging = false, dragProps }: EntityCardProps) {
   return (
     <button
       type="button"
