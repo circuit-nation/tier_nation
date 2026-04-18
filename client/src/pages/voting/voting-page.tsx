@@ -31,6 +31,16 @@ export function VotingPage() {
   const { activeEntityId, overDestination, draggableProps, dropzoneProps } = useDragDrop(moveEntity)
   const isPoolOver = overDestination === 'POOL'
 
+  const poolCards = pool.map((entity) => (
+    <EntityCard
+      key={entity.id}
+      entity={entity}
+      className="w-fit"
+      dragProps={draggableProps}
+      isDragging={activeEntityId === entity.id}
+    />
+  ))
+
   const handleSubmit = () => {
     if (!canSubmit) {
       setSubmitMessage(`Add at least ${minimumRequiredCount} entities before submitting.`)
@@ -49,7 +59,7 @@ export function VotingPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-28 sm:pb-0">
       <section className="">
         <div className="mb-4">
           <p className="text-sm font-semibold tracking-[0.18em] text-foreground sm:text-base">{list.name}</p>
@@ -69,21 +79,11 @@ export function VotingPage() {
           data-destination="POOL"
           {...dropzoneProps}
           className={cn(
-            'mt-4 rounded-lg border border-border/90 p-3 transition-all sm:p-4',
+            'mt-4 hidden rounded-lg border border-border/90 p-3 transition-all sm:block sm:p-4',
             isPoolOver && 'border-primary/45 ring-2 ring-ring/45',
           )}
         >
-          <div className="flex flex-wrap flex-row items-center gap-6">
-            {pool.map((entity) => (
-              <EntityCard
-                key={entity.id}
-                entity={entity}
-                className="w-fit"
-                dragProps={draggableProps}
-                isDragging={activeEntityId === entity.id}
-              />
-            ))}
-          </div>
+          <div className="flex flex-wrap flex-row items-center gap-6">{poolCards}</div>
         </section>
 
         <div className="mt-4 flex justify-end">
@@ -101,6 +101,24 @@ export function VotingPage() {
       {submitMessage ? (
         <p className="rounded-xl border border-primary/35 bg-primary/12 px-3 py-2 text-xs font-medium text-primary">{submitMessage}</p>
       ) : null}
+
+      <section
+        data-destination="POOL"
+        {...dropzoneProps}
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-card/95 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] backdrop-blur-sm sm:hidden',
+          isPoolOver && 'border-primary/45 ring-2 ring-ring/45',
+        )}
+      >
+        <div className="mx-auto max-w-7xl space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Scroll horizontally to see the pool of entities.
+          </p>
+          <div className="overflow-x-auto pb-1">
+            <div className="flex min-w-max items-center gap-3 pr-3">{poolCards}</div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
