@@ -102,18 +102,11 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
 
   body {
     @apply bg-background text-foreground;
-    background-image: radial-gradient(circle at 20% -10%, oklch(0.34 0.03 48 / 35%), transparent 45%),
-      radial-gradient(circle at 80% 110%, oklch(0.34 0.03 36 / 25%), transparent 45%);
+    font-family: 'DM Sans Variable', sans-serif;
   }
 
-  html {
-    @apply font-sans;
-    background-color: var(--background);
-  }
+
 }

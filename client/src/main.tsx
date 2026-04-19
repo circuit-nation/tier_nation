@@ -5,6 +5,11 @@ import { RouterProvider } from 'react-router-dom'
 import { AppProviders } from '@/app/providers'
 import { router } from '@/app/router'
 
+// Font DM Sans
+import '@fontsource-variable/dm-sans/opsz-italic.css';
+import '@fontsource-variable/dm-sans/wght.css';
+import '@fontsource-variable/dm-sans/wght-italic.css';
+
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
