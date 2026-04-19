@@ -1,4 +1,4 @@
-import type { Entity } from '@/types'
+import type { Entity } from '@/types';
 
 export const drivers: Entity[] = [
   { id: 'max', name: 'Max Verstappen', team: 'Red Bull', tags: ['Champion'] },
@@ -13,4 +13,4 @@ export const drivers: Entity[] = [
   { id: 'alex', name: 'Alex Albon', team: 'Williams' },
   { id: 'carlos', name: 'Carlos Sainz', team: 'Williams' },
   { id: 'yuki', name: 'Yuki Tsunoda', team: 'RB' },
-]
+];

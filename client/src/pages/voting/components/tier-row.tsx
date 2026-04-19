@@ -1,45 +1,50 @@
-import type { NativeDraggableProps, NativeDropzoneProps } from '@/hooks/use-drag-drop'
-import { TIER_ACCENT_BY_VALUE } from '@/lib/constants'
-import { cn } from '@/lib/utils'
-import { EntityCard } from '@/pages/voting/components/entity-card'
-import type { Entity, Tier } from '@/types'
+import type {
+  NativeDraggableProps,
+  NativeDropzoneProps,
+} from '@/hooks/use-drag-drop';
+import { TIER_ACCENT_BY_VALUE } from '@/lib/constants';
+import { cn } from '@/lib/utils';
+import { EntityCard } from '@/pages/voting/components/entity-card';
+import type { Entity, Tier } from '@/types';
 
 type TierRowProps = {
-  tier: Tier
-  entities: Entity[]
-  draggableProps: NativeDraggableProps
-  dropzoneProps: NativeDropzoneProps
-  activeEntityId: string | null
-  isOver: boolean
-}
+  tier: Tier;
+  entities: Entity[];
+  draggableProps: NativeDraggableProps;
+  dropzoneProps: NativeDropzoneProps;
+  activeEntityId: string | null;
+  isOver: boolean;
+};
 
-export function TierRow({ tier, entities, draggableProps, dropzoneProps, activeEntityId, isOver }: TierRowProps) {
+export function TierRow({
+  tier,
+  entities,
+  draggableProps,
+  dropzoneProps,
+  activeEntityId,
+  isOver,
+}: TierRowProps) {
   return (
     <section
       data-destination={tier.value}
       {...dropzoneProps}
       className={cn(
         'rounded-md transition-all',
-        isOver && 'ring-2 ring-ring/55',
+        isOver && 'ring-2 ring-ring/55'
       )}
     >
-      <div className={cn(
-        `flex min-h-16 sm:min-h-20 md:min-h-24`
-      )}>
+      <div className={cn(`flex min-h-16 sm:min-h-20 md:min-h-24`)}>
         <div
           className={cn(
             `aspect-square w-16 sm:w-20 md:w-24`,
             `text-center text-xl md:text-2xl text-black font-bold flex items-center justify-center`,
-            TIER_ACCENT_BY_VALUE[tier.value],
+            TIER_ACCENT_BY_VALUE[tier.value]
           )}
         >
           {tier.label}
         </div>
 
-        <div className={cn(
-          `flex-1`,
-          `border border-muted p-1`,
-        )}>
+        <div className={cn(`flex-1`, `border border-muted p-1`)}>
           <div className="flex flex-wrap gap-2">
             {entities.map((entity) => (
               <EntityCard
@@ -60,5 +65,5 @@ export function TierRow({ tier, entities, draggableProps, dropzoneProps, activeE
         </div>
       </div>
     </section>
-  )
+  );
 }

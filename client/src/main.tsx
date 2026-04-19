@@ -1,21 +1,21 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { RouterProvider } from 'react-router-dom'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { RouterProvider } from 'react-router-dom';
 
-import { AppProviders } from '@/app/providers'
-import { router } from '@/app/router'
+import { AppProviders } from '@/app/providers';
+import { router } from '@/app/router';
 
 // Font DM Sans
 import '@fontsource-variable/dm-sans/opsz-italic.css';
 import '@fontsource-variable/dm-sans/wght.css';
 import '@fontsource-variable/dm-sans/wght-italic.css';
 
-import './index.css'
+import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppProviders>
       <RouterProvider router={router} />
     </AppProviders>
-  </StrictMode>,
-)
+  </StrictMode>
+);

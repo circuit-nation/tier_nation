@@ -1,7 +1,12 @@
-import type { ComponentProps } from 'react'
+import type { ComponentProps } from 'react';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 export function Container({ className, ...props }: ComponentProps<'div'>) {
-  return <div className={cn('mx-auto w-full max-w-6xl px-4 sm:px-6', className)} {...props} />
+  return (
+    <div
+      className={cn('mx-auto w-full max-w-6xl px-4 sm:px-6', className)}
+      {...props}
+    />
+  );
 }

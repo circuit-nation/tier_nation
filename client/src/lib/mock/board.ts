@@ -1,4 +1,4 @@
-import type { TierBoardState } from '@/types'
+import type { TierBoardState } from '@/types';
 
 export const initialBoard: TierBoardState = {
   S: [],
@@ -8,4 +8,4 @@ export const initialBoard: TierBoardState = {
   D: [],
   E: [],
   F: [],
-}
+};

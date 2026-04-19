@@ -1,4 +1,4 @@
-import type { Vote } from '@/types'
+import type { Vote } from '@/types';
 
 export const sampleVotes: Vote[] = [
   {
@@ -9,4 +9,4 @@ export const sampleVotes: Vote[] = [
     tier: 'S',
     createdAt: '2026-04-15T12:00:00.000Z',
   },
-]
+];

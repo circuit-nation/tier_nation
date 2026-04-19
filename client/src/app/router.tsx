@@ -1,10 +1,10 @@
-import { Navigate, createBrowserRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom';
 
-import { AppLayout } from '@/app/layout'
-import { RootRouteErrorBoundary } from '@/app/route-error'
-import { LIVE_LIST_ID } from '@/lib/constants'
-import { HomePage } from '@/pages/home/home-page'
-import { VotingPage } from '@/pages/voting/voting-page'
+import { AppLayout } from '@/app/layout';
+import { RootRouteErrorBoundary } from '@/app/route-error';
+import { LIVE_LIST_ID } from '@/lib/constants';
+import { HomePage } from '@/pages/home/home-page';
+import { VotingPage } from '@/pages/voting/voting-page';
 
 export const router = createBrowserRouter([
   {
@@ -30,4 +30,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-])
+]);

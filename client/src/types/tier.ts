@@ -1,14 +1,14 @@
-export const TIER_VALUES = ['S', 'A', 'B', 'C', 'D', 'E', 'F'] as const
+export const TIER_VALUES = ['S', 'A', 'B', 'C', 'D', 'E', 'F'] as const;
 
-export type TierValue = (typeof TIER_VALUES)[number]
+export type TierValue = (typeof TIER_VALUES)[number];
 
 export type Tier = {
-  value: TierValue
-  label: string
-  score: number
-  order: number
-}
+  value: TierValue;
+  label: string;
+  score: number;
+  order: number;
+};
 
 export type TierBoardState = {
-  [key in TierValue]: string[]
-}
+  [key in TierValue]: string[];
+};

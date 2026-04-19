@@ -1,8 +1,12 @@
-import type { ComponentProps } from 'react'
+import type { ComponentProps } from 'react';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-function Input({ className, type = 'text', ...props }: ComponentProps<'input'>) {
+function Input({
+  className,
+  type = 'text',
+  ...props
+}: ComponentProps<'input'>) {
   return (
     <input
       data-slot="input"
@@ -13,11 +17,11 @@ function Input({ className, type = 'text', ...props }: ComponentProps<'input'>) 
         'focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30',
         'disabled:pointer-events-none disabled:opacity-50',
         'aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/30',
-        className,
+        className
       )}
       {...props}
     />
-  )
+  );
 }
 
-export { Input }
+export { Input };
