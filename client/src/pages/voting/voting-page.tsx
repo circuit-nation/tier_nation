@@ -1,20 +1,33 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { useDragDrop } from '@/hooks/use-drag-drop';
 import { useVoting } from '@/hooks/use-voting';
+import {
+  calculateEntityAverageRankings,
+  calculateVoteAverages,
+  getVotesByList,
+  postVotes,
+  type EntityAverageRanking,
+  type VoteAverages,
+} from '@/lib/mock/votes';
 import { cn } from '@/lib/utils';
 import { EntityCard } from '@/pages/voting/components/entity-card';
 import { SubmitBar } from '@/pages/voting/components/submit-bar';
 import { TierBoard } from '@/pages/voting/components/tier-board';
-import { postVotes } from '@/lib/mock/votes';
+import { VoteAverageSummary } from '@/pages/voting/components/vote-average-summary';
 import { validateVotePayload } from '@/lib/validation/voteSchema';
+import type { TierValue } from '@/types';
 
 export function VotingPage() {
   const { listId } = useParams();
   const [submitMessage, setSubmitMessage] = useState<string>('');
   const [submitError, setSubmitError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [voteAverages, setVoteAverages] = useState<VoteAverages | null>(null);
+  const [entityRankings, setEntityRankings] = useState<EntityAverageRanking[]>(
+    []
+  );
 
   const {
     list,
@@ -35,6 +48,28 @@ export function VotingPage() {
     useDragDrop(moveEntity);
   const isPoolOver = overDestination === 'POOL';
 
+  const tierScores = useMemo(() => {
+    const scoreMap = {
+      S: 0,
+      A: 0,
+      B: 0,
+      C: 0,
+      D: 0,
+      E: 0,
+      F: 0,
+    } satisfies Record<TierValue, number>;
+
+    for (const tier of list.tiers) {
+      scoreMap[tier.value] = tier.score;
+    }
+
+    return scoreMap;
+  }, [list.tiers]);
+
+  const maxTierScore = useMemo(() => {
+    return Math.max(...list.tiers.map((tier) => tier.score), 0);
+  }, [list.tiers]);
+
   const poolCards = pool.map((entity) => (
     <EntityCard
       key={entity.id}
@@ -46,6 +81,9 @@ export function VotingPage() {
   ));
 
   const handleSubmit = async () => {
+    setVoteAverages(null);
+    setEntityRankings([]);
+
     if (!canSubmit) {
       setSubmitMessage(
         `Add at least ${minimumRequiredCount} entities before submitting.`
@@ -66,6 +104,10 @@ export function VotingPage() {
     setSubmitError('');
     try {
       await postVotes(payload);
+      const allVotesForList = await getVotesByList(list.id);
+      setVoteAverages(calculateVoteAverages(allVotesForList, tierScores));
+      setEntityRankings(calculateEntityAverageRankings(allVotesForList, tierScores));
+
       const submittedAt = new Date().toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
@@ -73,8 +115,6 @@ export function VotingPage() {
       setSubmitMessage(
         `Submitted ${payload.length} vote placements at ${submittedAt}`
       );
-      // Optionally reset board after successful submit
-      resetBoard();
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : 'Submission failed');
     } finally {
@@ -130,6 +170,15 @@ export function VotingPage() {
         <p className="rounded-xl border border-primary/35 bg-primary/12 px-3 py-2 text-xs font-medium text-primary">
           {submitMessage}
         </p>
+      ) : null}
+      {voteAverages ? (
+        <VoteAverageSummary
+          averages={voteAverages}
+          entityRankings={entityRankings}
+          tiers={tiers}
+          entitiesById={entitiesById}
+          maxScore={maxTierScore}
+        />
       ) : null}
       {submitError ? (
         <p className="rounded-xl border border-primary/35 bg-primary/12 px-3 py-2 text-xs font-medium text-red-500">
