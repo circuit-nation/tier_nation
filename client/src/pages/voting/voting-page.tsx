@@ -7,10 +7,14 @@ import { cn } from '@/lib/utils';
 import { EntityCard } from '@/pages/voting/components/entity-card';
 import { SubmitBar } from '@/pages/voting/components/submit-bar';
 import { TierBoard } from '@/pages/voting/components/tier-board';
+import { postVotes } from '@/lib/mock/votes';
+import { validateVotePayload } from '@/lib/validation/voteSchema';
 
 export function VotingPage() {
   const { listId } = useParams();
-  const [submitMessage, setSubmitMessage] = useState('');
+  const [submitMessage, setSubmitMessage] = useState<string>('');
+  const [submitError, setSubmitError] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     list,
@@ -41,7 +45,7 @@ export function VotingPage() {
     />
   ));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) {
       setSubmitMessage(
         `Add at least ${minimumRequiredCount} entities before submitting.`
@@ -50,16 +54,32 @@ export function VotingPage() {
     }
 
     const payload = buildVotePayload('mock-user');
-    console.log('Mock POST /vote payload', payload);
+    // Validate payload with Zod
+    try {
+      validateVotePayload(payload);
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : 'Validation error');
+      return;
+    }
 
-    const submittedAt = new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    setSubmitMessage(
-      `Submitted ${payload.length} vote placements at ${submittedAt}`
-    );
+    setIsSubmitting(true);
+    setSubmitError('');
+    try {
+      await postVotes(payload);
+      const submittedAt = new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      setSubmitMessage(
+        `Submitted ${payload.length} vote placements at ${submittedAt}`
+      );
+      // Optionally reset board after successful submit
+      resetBoard();
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : 'Submission failed');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -99,7 +119,7 @@ export function VotingPage() {
             selectedCount={selectedCount}
             totalCount={totalCount}
             minimumRequiredCount={minimumRequiredCount}
-            disabled={!canSubmit}
+            disabled={!canSubmit} isSubmitting={isSubmitting}
             onSubmit={handleSubmit}
             onReset={resetBoard}
           />
@@ -109,6 +129,11 @@ export function VotingPage() {
       {submitMessage ? (
         <p className="rounded-xl border border-primary/35 bg-primary/12 px-3 py-2 text-xs font-medium text-primary">
           {submitMessage}
+        </p>
+      ) : null}
+      {submitError ? (
+        <p className="rounded-xl border border-primary/35 bg-primary/12 px-3 py-2 text-xs font-medium text-red-500">
+          {submitError}
         </p>
       ) : null}
 

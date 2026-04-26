@@ -8,6 +8,7 @@ type SubmitBarProps = {
   totalCount: number;
   minimumRequiredCount: number;
   disabled: boolean;
+  isSubmitting?: boolean;
   onSubmit: () => void;
   onReset: () => void;
 };
@@ -17,6 +18,7 @@ export function SubmitBar({
   totalCount,
   minimumRequiredCount,
   disabled,
+  isSubmitting = false,
   onSubmit,
   onReset,
 }: SubmitBarProps) {
@@ -40,9 +42,13 @@ export function SubmitBar({
         <IconRefresh className="size-3.5" stroke={1.8} />
         Reset
       </Button>
-      <Button onClick={onSubmit} disabled={disabled} className="rounded-xl">
-        <IconSend2 className="size-3.5" stroke={1.8} />
-        Submit
+      <Button onClick={onSubmit} disabled={disabled || isSubmitting} className="rounded-xl flex items-center gap-1">
+        {isSubmitting ? (
+          <IconRefresh className="size-3.5 animate-spin" stroke={1.8} />
+        ) : (
+          <IconSend2 className="size-3.5" stroke={1.8} />
+        )}
+        {isSubmitting ? 'Submitting…' : 'Submit'}
       </Button>
     </div>
   );
