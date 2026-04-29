@@ -1,38 +1,26 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
-	"net/http"
-	"os"
+
+	"github.com/circuit-nation/tier_nation/server/internal/config"
+	"github.com/circuit-nation/tier_nation/server/internal/database"
+	"github.com/circuit-nation/tier_nation/server/internal/server"
 )
 
-type healthResponse struct {
-	Status string `json:"status"`
-}
-
 func main() {
-	mux := http.NewServeMux()
+	cfg := config.Load()
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("tier_nation server is running"))
-	})
-
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(healthResponse{Status: "ok"})
-	})
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	db, err := database.Connect(cfg)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	addr := ":" + port
-	log.Printf("server listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
-		log.Fatalf("server failed: %v", err)
+	s := server.NewServer(cfg, db)
+
+	log.Printf("server running on port: %s", cfg.Port)
+
+	if err := s.Run(); err != nil {
+		log.Fatalf("failed to start server %v", err)
 	}
 }
