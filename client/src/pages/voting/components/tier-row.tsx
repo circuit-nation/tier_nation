@@ -29,14 +29,14 @@ export function TierRow({
       data-destination={tier.value}
       {...dropzoneProps}
       className={cn(
-        'rounded-md transition-all',
+        'rounded-md transition-all ',
         isOver && 'ring-2 ring-ring/55'
       )}
     >
-      <div className={cn(`flex min-h-16 sm:min-h-20 md:min-h-24`)}>
+      <div className={cn(`flex min-h-16 max-h-32 md:max-h-48`)}>
         <div
           className={cn(
-            `aspect-square w-16 sm:w-20 md:w-24`,
+            `aspect-square w-16 `,
             `text-center text-xl md:text-2xl text-black font-bold flex items-center justify-center`,
             TIER_ACCENT_BY_VALUE[tier.value]
           )}
@@ -44,7 +44,7 @@ export function TierRow({
           {tier.label}
         </div>
 
-        <div className={cn(`flex-1`, `border border-muted p-1`)}>
+        <div className={cn(`flex-1`, `border border-muted p-1 overflow-y-auto`)}>
           <div className="flex flex-wrap gap-2">
             {entities.map((entity) => (
               <EntityCard

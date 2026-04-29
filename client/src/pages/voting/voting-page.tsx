@@ -126,7 +126,7 @@ export function VotingPage() {
     <div className="space-y-4 pb-28 sm:pb-0">
       <section className="">
         <div className="mb-4">
-          <p className="text-sm font-semibold tracking-[0.18em] text-foreground sm:text-base">
+          <p className="text-sm font-semibold text-foreground sm:text-base">
             {list.name}
           </p>
         </div>
