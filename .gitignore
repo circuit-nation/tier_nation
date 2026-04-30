@@ -25,3 +25,5 @@ logs/
 coverage/
 .tmp/
 .cache/
+
+guides/

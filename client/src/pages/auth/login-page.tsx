@@ -1,10 +1,13 @@
 import logo from '@/assets/logo.svg';
+import { useAuth } from '@/hooks/use-auth';
 import { APP_NAME } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { IconBrandGoogleFilled } from '@tabler/icons-react';
 
 export function LoginPage() {
+	const { isAuthenticated, login, status } = useAuth();
+
     return (
         <div className="relative flex min-h-screen items-center justify-center">
             {/* Radial gradient background */}
@@ -29,12 +32,20 @@ export function LoginPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-8 pt-8">
-
-                    {/* Sign In Button */}
-                    <Button className="w-full gap-2 text-white" size="lg" variant="default">
-                        <IconBrandGoogleFilled size={24} />
-                        Continue with Google
+				{status === 'loading' ? (
+					<p className="text-sm text-muted-foreground">
+						Checking your session...
+					</p>
+				) : isAuthenticated ? (
+                    <p className="text-sm text-muted-foreground">
+                        You are already signed in. Return to the home page to continue.
+                    </p>
+                ) : (
+                    <Button className="w-full gap-2 text-white" size="lg" variant="default" onClick={login}>
+                            <IconBrandGoogleFilled size={24} />
+                            Continue with Google
                     </Button>
+                )}
 
                 </CardContent>
             </Card>
