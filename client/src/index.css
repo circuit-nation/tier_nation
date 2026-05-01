@@ -70,7 +70,7 @@
   --muted-foreground: var(--color-neutral-400);
   --accent: var(--color-neutral-700);
   --accent-foreground: var(--color-neutral-100);
-  --destructive: var(--primary);
+  --destructive: var(--color-red-500);
   --border: var(--color-neutral-700);
   --input: var(--color-neutral-700);
   --ring: var(--color-neutral-400);

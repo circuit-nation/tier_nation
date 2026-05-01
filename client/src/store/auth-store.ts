@@ -15,8 +15,10 @@ type AuthStore = {
 	accessToken: string | null;
 	user: AuthUser | null;
 	status: AuthStatus;
+	isAnonymous: boolean;
 	setSession: (accessToken: string, user?: AuthUser | null) => void;
 	setUser: (user: AuthUser | null) => void;
+	setIsAnonymous: (isAnonymous: boolean) => void;
 	clearSession: () => void;
 	hydrateFromCookie: () => string | null;
 };
@@ -25,6 +27,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 	accessToken: null,
 	user: null,
 	status: 'loading',
+	isAnonymous: false,
 	setSession: (accessToken, user = null) => {
 		setCookie(
 			ACCESS_TOKEN_COOKIE_NAME,
@@ -39,6 +42,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
 	},
 	setUser: (user) => {
 		set({ user });
+	},
+	setIsAnonymous: (isAnonymous) => {
+		set({ isAnonymous });
 	},
 	clearSession: () => {
 		deleteCookie(ACCESS_TOKEN_COOKIE_NAME);

@@ -14,7 +14,9 @@ type AuthContextValue = {
 	accessToken: string | null;
 	user: AuthUser | null;
 	status: 'loading' | 'authenticated' | 'unauthenticated';
+	isAnonymous: boolean;
 	isAuthenticated: boolean;
+	setIsAnonymous: (isAnonymous: boolean) => void;
 	login: () => void;
 	logout: () => Promise<void>;
 	refreshAccessToken: () => Promise<string | null>;
@@ -48,8 +50,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	const accessToken = useAuthStore((state) => state.accessToken);
 	const user = useAuthStore((state) => state.user);
 	const status = useAuthStore((state) => state.status);
+	const isAnonymous = useAuthStore((state) => state.isAnonymous);
 	const setSession = useAuthStore((state) => state.setSession);
 	const setUser = useAuthStore((state) => state.setUser);
+	const setIsAnonymous = useAuthStore((state) => state.setIsAnonymous);
 	const clearSession = useAuthStore((state) => state.clearSession);
 	const hydrateFromCookie = useAuthStore((state) => state.hydrateFromCookie);
 
@@ -59,7 +63,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 			credentials: 'include',
 		});
 
-		if (response.status === 401) {
+		if (response.status === 401 || response.status === 400) {
 			clearSession();
 			return null;
 		}
@@ -159,7 +163,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 			accessToken,
 			user,
 			status,
+			isAnonymous,
 			isAuthenticated: status === 'authenticated' && Boolean(accessToken),
+			setIsAnonymous,
 			login,
 			logout,
 			refreshAccessToken,
@@ -170,9 +176,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
 			accessToken,
 			bootstrapAuth,
 			completeOAuthLogin,
+			isAnonymous,
 			login,
 			logout,
 			refreshAccessToken,
+			setIsAnonymous,
 			status,
 			user,
 		]
