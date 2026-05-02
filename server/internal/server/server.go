@@ -7,6 +7,7 @@ import (
 	"github.com/circuit-nation/tier_nation/server/internal/handlers"
 	"github.com/circuit-nation/tier_nation/server/internal/middleware"
 	"github.com/circuit-nation/tier_nation/server/internal/services"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -29,15 +30,27 @@ func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 	authHandler := handlers.NewAuthHandler(authService, jwtService, cfg)
 
 	s := &Server{
-		router:      gin.Default(),
+		router:      gin.New(),
 		config:      cfg,
 		authHandler: authHandler,
 		db:          db,
 		jwtService:  jwtService,
 	}
 
-	s.router.SetTrustedProxies(nil)
+	s.router.Use(gin.Logger())
+	s.router.Use(gin.Recovery())
+
+	s.router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{cfg.ClientURL},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
+
 	s.setupRoutes()
+	s.router.SetTrustedProxies(nil)
+
 	return s
 }
 

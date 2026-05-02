@@ -89,7 +89,7 @@ func (h *AuthHandler) Refresh(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&body); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "refresh token is required"})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "refresh token is required"})
 		return
 	}
 
