@@ -7,7 +7,8 @@
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: 'Inter Variable', sans-serif;
+  --font-sans: 'DM Sans Variable', sans-serif;
+  --font-grotesk: 'Space Grotesk Variable', sans-serif;
   --color-tier-s: var(--tier-s);
   --color-tier-a: var(--tier-a);
   --color-tier-b: var(--tier-b);

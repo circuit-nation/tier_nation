@@ -11,13 +11,15 @@ import {
   type EntityAverageRanking,
   type VoteAverages,
 } from '@/lib/mock/votes';
-import { cn } from '@/lib/utils';
-import { EntityCard } from '@/pages/voting/components/entity-card';
-import { SubmitBar } from '@/pages/voting/components/submit-bar';
+import { EntityPool } from '@/pages/voting/components/entity-pool';
+import { SubmitButton } from '@/pages/voting/components/submit-button';
 import { TierBoard } from '@/pages/voting/components/tier-board';
 import { VoteAverageSummary } from '@/pages/voting/components/vote-average-summary';
 import { validateVotePayload } from '@/lib/validation/voteSchema';
 import type { TierValue } from '@/types';
+import { Button } from '@/components/ui/button';
+import { IconRestore, IconShare } from '@tabler/icons-react';
+import { getRelativeTime } from '@/lib/utils';
 
 export function VotingPage() {
   const { listId } = useParams();
@@ -46,7 +48,6 @@ export function VotingPage() {
 
   const { activeEntityId, overDestination, draggableProps, dropzoneProps } =
     useDragDrop(moveEntity);
-  const isPoolOver = overDestination === 'POOL';
 
   const tierScores = useMemo(() => {
     const scoreMap = {
@@ -58,27 +59,14 @@ export function VotingPage() {
       E: 0,
       F: 0,
     } satisfies Record<TierValue, number>;
-
-    for (const tier of list.tiers) {
-      scoreMap[tier.value] = tier.score;
-    }
-
+    for (const tier of list.tiers) scoreMap[tier.value] = tier.score;
     return scoreMap;
   }, [list.tiers]);
 
-  const maxTierScore = useMemo(() => {
-    return Math.max(...list.tiers.map((tier) => tier.score), 0);
-  }, [list.tiers]);
-
-  const poolCards = pool.map((entity) => (
-    <EntityCard
-      key={entity.id}
-      entity={entity}
-      className="w-fit"
-      dragProps={draggableProps}
-      isDragging={activeEntityId === entity.id}
-    />
-  ));
+  const maxTierScore = useMemo(
+    () => Math.max(...list.tiers.map((t) => t.score), 0),
+    [list.tiers]
+  );
 
   const handleSubmit = async () => {
     setVoteAverages(null);
@@ -92,7 +80,6 @@ export function VotingPage() {
     }
 
     const payload = buildVotePayload('mock-user');
-    // Validate payload with Zod
     try {
       validateVotePayload(payload);
     } catch (err: unknown) {
@@ -104,10 +91,9 @@ export function VotingPage() {
     setSubmitError('');
     try {
       await postVotes(payload);
-      const allVotesForList = await getVotesByList(list.id);
-      setVoteAverages(calculateVoteAverages(allVotesForList, tierScores));
-      setEntityRankings(calculateEntityAverageRankings(allVotesForList, tierScores));
-
+      const allVotes = await getVotesByList(list.id);
+      setVoteAverages(calculateVoteAverages(allVotes, tierScores));
+      setEntityRankings(calculateEntityAverageRankings(allVotes, tierScores));
       const submittedAt = new Date().toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
@@ -122,13 +108,38 @@ export function VotingPage() {
     }
   };
 
+  const isPastEnd = new Date() > new Date(list.endTime);
+
   return (
-    <div className="space-y-4 pb-28 sm:pb-0">
-      <section className="">
-        <div className="mb-4">
-          <p className="text-sm font-semibold text-foreground sm:text-base">
-            {list.name}
-          </p>
+    // pb-28/pb-40 reserves space so the fixed pool doesn't overlap content
+    <div className="space-y-4 pb-28 sm:pb-40">
+      <section className="space-y-4">
+        <div className="flex flex-col md:flex-row justify-center items-center md:items-end gap-y-4">
+          <div className="flex-1 max-w-4xl text-center md:text-left">
+            <p className="text-xs font-grotesk text-muted-foreground">{isPastEnd && <span className="text-red-500">Ended</span>} {getRelativeTime(list.endTime)}</p>
+            <p className="text-4xl md:text-5xl font-sans font-semibold">
+              {list.name}
+            </p>
+            <p className="text-lg font-medium font-grotesk text-muted-foreground">
+              {list.description}
+            </p>
+          </div>
+          <div className="flex flex-row gap-2">
+            <Button variant="ghost" size="lg" onClick={resetBoard}>
+              <IconRestore /> Reset
+            </Button>
+            <Button variant="ghost" size="lg">
+              <IconShare /> Share List
+            </Button>
+            <SubmitButton
+              selectedCount={selectedCount}
+              totalCount={totalCount}
+              minimumRequiredCount={minimumRequiredCount}
+              disabled={!canSubmit}
+              isSubmitting={isSubmitting}
+              onSubmit={handleSubmit}
+            />
+          </div>
         </div>
 
         <TierBoard
@@ -140,38 +151,14 @@ export function VotingPage() {
           activeEntityId={activeEntityId}
           overDestination={overDestination}
         />
-
-        <section
-          data-destination="POOL"
-          {...dropzoneProps}
-          className={cn(
-            'mt-4 hidden rounded-lg border border-border/90 p-3 transition-all sm:block sm:p-4',
-            isPoolOver && 'border-primary/45 ring-2 ring-ring/45'
-          )}
-        >
-          <div className="flex flex-wrap flex-row items-center gap-6">
-            {poolCards}
-          </div>
-        </section>
-
-        <div className="mt-4 flex justify-end">
-          <SubmitBar
-            selectedCount={selectedCount}
-            totalCount={totalCount}
-            minimumRequiredCount={minimumRequiredCount}
-            disabled={!canSubmit} isSubmitting={isSubmitting}
-            onSubmit={handleSubmit}
-            onReset={resetBoard}
-          />
-        </div>
       </section>
 
-      {submitMessage ? (
+      {submitMessage && (
         <p className="rounded-xl border border-primary/35 bg-primary/12 px-3 py-2 text-xs font-medium text-primary">
           {submitMessage}
         </p>
-      ) : null}
-      {voteAverages ? (
+      )}
+      {voteAverages && (
         <VoteAverageSummary
           averages={voteAverages}
           entityRankings={entityRankings}
@@ -179,32 +166,21 @@ export function VotingPage() {
           entitiesById={entitiesById}
           maxScore={maxTierScore}
         />
-      ) : null}
-      {submitError ? (
+      )}
+      {submitError && (
         <p className="rounded-xl border border-primary/35 bg-primary/12 px-3 py-2 text-xs font-medium text-red-500">
           {submitError}
         </p>
-      ) : null}
+      )}
 
-      <section
-        data-destination="POOL"
-        {...dropzoneProps}
-        className={cn(
-          'fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-card/95 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] backdrop-blur-sm sm:hidden',
-          isPoolOver && 'border-primary/45 ring-2 ring-ring/45'
-        )}
-      >
-        <div className="mx-auto max-w-7xl space-y-2">
-          <p className="text-xs text-muted-foreground">
-            Scroll horizontally to see the pool of entities.
-          </p>
-          <div className="overflow-x-auto pb-1">
-            <div className="flex min-w-max items-center gap-3 pr-3">
-              {poolCards}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Entity Pool */}
+      <EntityPool
+        pool={pool}
+        activeEntityId={activeEntityId}
+        isOver={overDestination === 'POOL'}
+        draggableProps={draggableProps}
+        dropzoneProps={dropzoneProps}
+      />
     </div>
   );
 }

@@ -33,19 +33,23 @@ export function TierRow({
         isOver && 'ring-2 ring-ring/55'
       )}
     >
-      <div className={cn(`flex min-h-16 max-h-32 md:max-h-48`)}>
+      <div className={cn(`flex max-h-48 sm:max-h-72`)}>
         <div
           className={cn(
-            `aspect-square w-16 `,
-            `text-center text-xl md:text-2xl text-black font-bold flex items-center justify-center`,
+            `aspect-square w-16 md:w-28 `,
+            `text-center text-2xl md:text-4xl text-black font-bold font-grotesk flex items-center justify-center`,
+            `rounded-tl-md rounded-bl-md`,
             TIER_ACCENT_BY_VALUE[tier.value]
           )}
         >
           {tier.label}
         </div>
 
-        <div className={cn(`flex-1`, `border border-muted p-1 overflow-y-auto`)}>
-          <div className="flex flex-wrap gap-2">
+        {/* Entity Dropzone */}
+        <div
+          className={cn(`flex-1`, `border border-muted p-2 overflow-y-auto`)}
+        >
+          <div className="flex flex-wrap gap-1 sm:gap-2">
             {entities.map((entity) => (
               <EntityCard
                 key={entity.id}
