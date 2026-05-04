@@ -1,6 +1,7 @@
 import { LiveVotingCard } from './live-voting-card';
 import { VotingListPreview } from './voting-list-preview';
 import { SectionHeader } from './section-header';
+import { f1List, votingLists } from '@/lib/mock/lists';
 
 export function ListsSpotlight({
   list,

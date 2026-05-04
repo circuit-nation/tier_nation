@@ -136,7 +136,7 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
               </div>
             </div>
           )}
-          {!timeRemaining.isClosed && (
+          {timeRemaining !== null && !timeRemaining.isClosed && (
             <div className="flex flex-row gap-2">
               <Button variant="ghost" size="icon-lg">
                 <IconShare />
