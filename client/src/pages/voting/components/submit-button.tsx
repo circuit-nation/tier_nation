@@ -1,4 +1,4 @@
-import { IconRefresh, IconSend2 } from '@tabler/icons-react';
+import { IconRefresh, IconUpload } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 
 type SubmitButtonProps = {
@@ -24,13 +24,13 @@ export function SubmitButton({
     <Button
       onClick={onSubmit}
       disabled={disabled || isSubmitting || !canSubmit}
-      variant="outline"
+      variant="default"
       size="lg"
     >
       {isSubmitting ? (
         <IconRefresh className="animate-spin" />
       ) : (
-        <IconSend2 />
+        <IconUpload />
       )}
       {isSubmitting ? 'Submitting…' : 'Submit'}
     </Button>

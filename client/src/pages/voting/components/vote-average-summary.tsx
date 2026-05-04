@@ -30,7 +30,7 @@ export function VoteAverageSummary({
   }, [tiers, userBoard, communityBoard]);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-1">
       <RankingColumn
         title="Your Ranking"
         tiers={visibleTiers}
@@ -103,7 +103,7 @@ function RankingColumn({
               <div className="flex min-h-24">
                 <div
                   className={cn(
-                    'font-grotesk flex w-20 shrink-0 items-center justify-center text-5xl font-bold text-black',
+                    'font-grotesk flex w-28 shrink-0 items-center justify-center text-5xl font-bold text-black',
                     TIER_ACCENT_BY_VALUE[tier.value]
                   )}
                 >

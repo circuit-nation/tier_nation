@@ -30,11 +30,30 @@ export const subscribeToCountdownClock = (onStoreChange: () => void) => {
 
 export const getCountdownNowSnapshot = () => clockSnapshot;
 
-export function formatTimeRemaining(endTime: string | undefined, nowMs: number) {
-  if (!endTime) return '';
+export type TimeRemainingParts = {
+  isClosed: boolean;
+  days: string;
+  hours: string;
+  minutes: string;
+  seconds: string;
+};
+
+export function getTimeRemainingParts(
+  endTime: string | undefined,
+  nowMs: number
+): TimeRemainingParts | null {
+  if (!endTime) return null;
 
   const timeLeft = new Date(endTime).getTime() - nowMs;
-  if (timeLeft <= 0) return 'Voting closed';
+  if (timeLeft <= 0) {
+    return {
+      isClosed: true,
+      days: '00',
+      hours: '00',
+      minutes: '00',
+      seconds: '00',
+    };
+  }
 
   const totalSeconds = Math.floor(timeLeft / 1000);
   const days = Math.floor(totalSeconds / 86_400);
@@ -42,7 +61,26 @@ export function formatTimeRemaining(endTime: string | undefined, nowMs: number) 
   const minutes = Math.floor((totalSeconds % 3_600) / 60);
   const seconds = totalSeconds % 60;
 
-  if (days > 0) return `${days}d ${hours}h ${minutes}m left`;
-  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s left`;
-  return `${minutes}m ${seconds}s left`;
+  return {
+    isClosed: false,
+    days: String(days).padStart(2, '0'),
+    hours: String(hours).padStart(2, '0'),
+    minutes: String(minutes).padStart(2, '0'),
+    seconds: String(seconds).padStart(2, '0'),
+  };
+}
+
+export function formatTimeRemaining(endTime: string | undefined, nowMs: number) {
+  const parts = getTimeRemainingParts(endTime, nowMs);
+  if (!parts) return '';
+  if (parts.isClosed) return 'Voting closed';
+
+  const days = Number(parts.days);
+  const hours = Number(parts.hours);
+  const minutes = Number(parts.minutes);
+  const seconds = Number(parts.seconds);
+
+  if (days > 0) return `Time remanining: ${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `Time remanining: ${hours}h ${minutes}m ${seconds}s`;
+  return `Time remanining: ${minutes}m ${seconds}s`;
 }

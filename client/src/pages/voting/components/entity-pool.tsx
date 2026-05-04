@@ -59,7 +59,7 @@ export function EntityPool({
       {...dropzoneProps}
       className={cn(
         'fixed inset-x-0 bottom-0 z-40',
-        'border-t border-border/80 bg-card/95 backdrop-blur-sm',
+        'border-t border-border/80 bg-background/80 backdrop-blur-sm',
         'transition-colors duration-150',
         isOver && 'border-primary/45 ring-2 ring-ring/45'
       )}
@@ -67,7 +67,7 @@ export function EntityPool({
       <div className="mx-auto max-w-6xl px-6 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         {/* Toolbar */}
         <div className="mb-2 flex items-center justify-between gap-3">
-          <p className="text-xs font-medium text-muted-foreground tabular-nums">
+          <p className="text-xs sm:text-sm font-medium tabular-nums">
             {remainingCount === 0
               ? 'All entities placed'
               : `${remainingCount} remaining`}
@@ -78,7 +78,7 @@ export function EntityPool({
             size="sm"
             onClick={cycleSort}
             className={cn(
-              'h-7 gap-1.5 px-2 text-xs',
+              'h-7 gap-1.5 px-2 text-xs sm:text-sm',
               sortOrder !== 'default' &&
                 'bg-primary/10 text-primary hover:bg-primary/15'
             )}
@@ -94,14 +94,12 @@ export function EntityPool({
 
         {/* Scrollable strip */}
         <div className="relative overflow-x-auto">
-          <div className="flex min-w-max items-center gap-3 pr-2">
+          <div className="flex flex-row gap-4">
             {sortedPool.map((entity) => (
-              <div key={entity.id} className="relative shrink-0">
+              <div key={entity.id} className="relative">
                 <EntityCard
                   entity={entity}
-                  className={cn(
-                    entity.placed && 'opacity-40'
-                  )}
+                  className={cn(entity.placed && 'opacity-40')}
                   dragProps={entity.placed ? undefined : draggableProps}
                   isDragging={activeEntityId === entity.id}
                 />

@@ -1,7 +1,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import {
-  formatTimeRemaining,
   getCountdownNowSnapshot,
+  getTimeRemainingParts,
   subscribeToCountdownClock,
 } from '@/lib/countdown';
 import { postVotes } from '@/lib/mock/votes';
@@ -12,10 +12,7 @@ import { IconRestore, IconShare } from '@tabler/icons-react';
 import { SubmitButton } from '@/pages/voting/components/submit-button';
 import { useVoting } from '@/hooks/use-voting';
 import { Separator } from '@/components/ui/separator';
-import {
-  ButtonGroup,
-  ButtonGroupSeparator,
-} from '@/components/ui/button-group';
+import { cn } from '@/lib/utils';
 
 type ActionBarProps = {
   listId: string;
@@ -40,7 +37,35 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
     resetBoard,
     buildVotePayload,
   } = useVoting(listId);
-  const countdownLabel = formatTimeRemaining(list.endTime, nowMs);
+  const timeRemaining = getTimeRemainingParts(list.endTime, nowMs);
+  const isLessThanOneHour =
+    timeRemaining !== null &&
+    timeRemaining.days === '00' &&
+    timeRemaining.hours === '00';
+  const countdownUnits = timeRemaining
+    ? [
+        {
+          key: 'days',
+          label: 'DAYS',
+          value: timeRemaining.days,
+        },
+        {
+          key: 'hours',
+          label: 'HRS',
+          value: timeRemaining.hours,
+        },
+        {
+          key: 'minutes',
+          label: 'MIN',
+          value: timeRemaining.minutes,
+        },
+        {
+          key: 'seconds',
+          label: 'SEC',
+          value: timeRemaining.seconds,
+        },
+      ]
+    : [];
 
   const handleSubmit = async () => {
     if (!canSubmit) {
@@ -80,22 +105,45 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
   return (
     <div className="space-y-2">
       <Separator orientation="horizontal" />
-      <section>
+      <section className="py-2">
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-          {countdownLabel && (
-            <p className="tabular-nums font-grotesk text-muted-foreground">
-              {countdownLabel}
-            </p>
+          {timeRemaining && (
+            <div className="flex items-center gap-2 font-grotesk">
+              <div className="flex flex-row items-center gap-2 justify-center">
+                {timeRemaining.isClosed ? (
+                  <p>Voting closed:</p>
+                ) : (
+                  <p>Time remaining:</p>
+                )}
+                <div className="flex flex-row items-center gap-1">
+                  {countdownUnits.map((unit) => (
+                    <div
+                      key={unit.key}
+                      className={cn(
+                        'flex min-w-12 flex-row gap-x-0.5 items-center rounded-md px-1 py-1 tabular-nums',
+                        `${isLessThanOneHour ? 'bg-destructive/40' : 'bg-white/20'}`
+                      )}
+                    >
+                      <p className="text-base leading-none font-semibold">
+                        {unit.value}
+                      </p>
+                      <p className="text-xs leading-none tracking-wide lowercase">
+                        {unit.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
-          <div className="flex flex-row gap-2">
-            <Button variant="outline" size="icon-lg">
-              <IconShare />
-            </Button>
-            <ButtonGroup className="rounded-sm">
-              <Button variant="outline" size="lg" onClick={resetBoard}>
+          {!timeRemaining.isClosed && (
+            <div className="flex flex-row gap-2">
+              <Button variant="ghost" size="icon-lg">
+                <IconShare />
+              </Button>
+              <Button variant="secondary" size="lg" onClick={resetBoard}>
                 <IconRestore /> Reset
               </Button>
-              <ButtonGroupSeparator />
               <SubmitButton
                 selectedCount={selectedCount}
                 totalCount={totalCount}
@@ -104,20 +152,16 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
                 isSubmitting={isSubmitting}
                 onSubmit={handleSubmit}
               />
-            </ButtonGroup>
-          </div>
+            </div>
+          )}
         </div>
       </section>
 
       {submitMessage && (
-        <p className="text-xs font-medium text-primary">
-          {submitMessage}
-        </p>
+        <p className="text-xs font-medium text-primary">{submitMessage}</p>
       )}
       {submitError && (
-        <p className="text-xs font-medium text-red-500">
-          {submitError}
-        </p>
+        <p className="text-xs font-medium text-red-500">{submitError}</p>
       )}
     </div>
   );

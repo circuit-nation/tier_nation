@@ -4,7 +4,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
@@ -14,7 +13,6 @@ import {
   IconLogout as LogOut,
   IconUser as UserRound,
 } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '../ui/skeleton';
 
 export default function UserInfo() {
@@ -27,7 +25,6 @@ export default function UserInfo() {
     status,
     user,
   } = useAuth();
-  const navigate = useNavigate();
 
   const getInitials = (name: string) =>
     name
@@ -39,7 +36,6 @@ export default function UserInfo() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login', { replace: true });
   };
 
   if (status === 'loading') {
@@ -53,7 +49,7 @@ export default function UserInfo() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="size-8 cursor-pointer">
+        <Avatar className="size-10 cursor-pointer border border-primary/60">
           <AvatarImage
             src={user.avatar_url ?? undefined}
             alt={user.name ?? 'User'}
@@ -70,16 +66,14 @@ export default function UserInfo() {
 
       <DropdownMenuContent className="w-60" align="end" sideOffset={8}>
         {/* Name & Email */}
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col gap-0.5">
-            <p className="text-sm font-semibold leading-tight truncate">
-              {isAnonymous ? '***********' : (user.name ?? 'Unknown User')}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {isAnonymous ? '***********' : (user.email ?? '')}
-            </p>
-          </div>
-        </DropdownMenuLabel>
+        <div className="flex flex-col gap-0.5 px-2 py-1.5 data-inset:pl-7.5">
+          <p className="text-sm font-semibold leading-tight truncate">
+            {isAnonymous ? '***********' : (user.name ?? 'Unknown User')}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">
+            {isAnonymous ? '***********' : (user.email ?? '')}
+          </p>
+        </div>
 
         <DropdownMenuSeparator />
 
@@ -90,9 +84,9 @@ export default function UserInfo() {
         >
           <div className="flex w-full items-center justify-between gap-2">
             <div>
-              <p className="text-sm text-muted-foreground">Anonymous mode</p>
+              <p className="text-sm">Be Anonymous</p>
               <p className="text-xs text-muted-foreground">
-                Submit forms without identity
+                Submit rankings anonymously.
               </p>
             </div>
             <Switch checked={isAnonymous} onCheckedChange={setIsAnonymous} />
@@ -104,11 +98,11 @@ export default function UserInfo() {
         {/* Logout */}
         <DropdownMenuItem asChild>
           <Button
-            variant="ghost"
+            variant="destructive"
             className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
             onClick={handleLogout}
           >
-            <LogOut className="mr-2 h-4 w-4" />
+            <LogOut className="size-4" />
             Log out
           </Button>
         </DropdownMenuItem>

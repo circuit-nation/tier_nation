@@ -46,9 +46,9 @@ export function EntityCard({
       type="button"
       data-entity-id={entity.id}
       className={cn(
-        'group',
+        'group flex flex-col items-center justify-center gap-1',
         dragProps?.draggable && 'cursor-grab active:cursor-grabbing',
-        isDragging && 'z-20 bg-card shadow-lg',
+        isDragging && 'z-20 shadow-lg',
         className
       )}
       {...dragProps}

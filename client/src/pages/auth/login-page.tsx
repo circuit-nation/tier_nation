@@ -1,6 +1,6 @@
 import logo from '@/assets/logo.svg';
 import { useAuth } from '@/hooks/use-auth';
-import { APP_NAME } from '@/lib/constants';
+import { APP_NAME, COMMUNITY_NAME } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { IconBrandGoogleFilled } from '@tabler/icons-react';
@@ -26,7 +26,7 @@ export function LoginPage() {
                         <div>
                             <h1 className="text-2xl font-medium">{APP_NAME}</h1>
                             <p className='text-xs text-muted-foreground'>
-                                A product of Circuit Nation.
+                                A product of {COMMUNITY_NAME}.
                             </p>
                         </div>
                     </div>

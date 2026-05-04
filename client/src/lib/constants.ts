@@ -1,6 +1,7 @@
 import type { TierValue } from '@/types';
 
 export const APP_NAME = 'Tier Nation';
+export const COMMUNITY_NAME = 'Circuit Nation';
 export const LIVE_LIST_ID = 'f1-2026';
 export const MIN_SUBMIT_DRIVER_RATIO = 0.6;
 export const API_BASE_URL =

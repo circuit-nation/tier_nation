@@ -18,7 +18,7 @@ export const f1List: List = {
   isLocked: false,
   isVisible: true,
   startTime: '2026-03-01T00:00:00.000Z',
-  endTime: '2026-12-31T23:59:59.000Z',
+  endTime: '2026-02-04T09:59:59.000Z',
   tiers: tierConfig,
 };
 

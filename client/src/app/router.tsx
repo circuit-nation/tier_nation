@@ -7,7 +7,7 @@ import { AuthCallbackPage } from '@/pages/auth/callback-page';
 import { LoginPage } from '@/pages/auth/login-page';
 import { HomePage } from '@/pages/home/home-page';
 import { VotingPage } from '@/pages/voting/voting-page';
-import { RequireAuth } from '@/components/auth/require-auth';
+// import { RequireAuth } from '@/components/auth/require-auth';
 
 export const router = createBrowserRouter([
   {
@@ -22,11 +22,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: (
-      <RequireAuth>
-        <AppLayout />
-      </RequireAuth>
-    ),
+    element: <AppLayout />,
     errorElement: <RootRouteErrorBoundary />,
     children: [
       {

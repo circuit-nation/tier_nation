@@ -47,7 +47,7 @@ export function TierRow({
 
         {/* Entity Dropzone */}
         <div
-          className={cn(`flex-1`, `border border-muted p-2 overflow-y-auto`)}
+          className={cn(`flex-1`, `border border-muted p-2.5 overflow-y-auto`)}
         >
           <div className="flex flex-wrap gap-0.5">
             {entities.map((entity) => (
@@ -62,7 +62,7 @@ export function TierRow({
           </div>
 
           {entities.length === 0 ? (
-            <p className="flex items-center justify-center h-full text-xs font-medium text-muted-foreground">
+            <p className="flex items-center justify-center h-full text-xs sm:text-sm font-medium text-muted-foreground">
               Drop entities here
             </p>
           ) : null}

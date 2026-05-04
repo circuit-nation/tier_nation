@@ -89,7 +89,7 @@ export function VotingPage() {
   return (
     // pb-28/pb-40 reserves space so the fixed pool doesn't overlap content
     <div className={hasComparison ? 'space-y-4' : 'space-y-4 pb-28 sm:pb-40'}>
-      <section className="space-y-4">
+      <section className="space-y-10">
         <div className="space-y-2">
           <div className="flex-1 max-w-4xl text-center md:text-left space-y-4">
             <p className="text-sm font-grotesk">
