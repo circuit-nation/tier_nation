@@ -24,7 +24,7 @@ export function SubmitButton({
     <Button
       onClick={onSubmit}
       disabled={disabled || isSubmitting || !canSubmit}
-      variant="default"
+      variant="outline"
       size="lg"
     >
       {isSubmitting ? (
