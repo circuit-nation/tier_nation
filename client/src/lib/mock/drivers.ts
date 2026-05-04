@@ -18,7 +18,8 @@ export const drivers: Entity[] = [
   {
     id: 'charles',
     name: 'Charles Leclerc',
-    imageUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=Charles%20Leclerc',
+    imageUrl:
+      'https://api.dicebear.com/9.x/initials/svg?seed=Charles%20Leclerc',
     team: 'Ferrari',
   },
   {
@@ -48,7 +49,8 @@ export const drivers: Entity[] = [
   {
     id: 'alonso',
     name: 'Fernando Alonso',
-    imageUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=Fernando%20Alonso',
+    imageUrl:
+      'https://api.dicebear.com/9.x/initials/svg?seed=Fernando%20Alonso',
     team: 'Aston Martin',
   },
   {

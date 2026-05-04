@@ -70,7 +70,10 @@ export function getTimeRemainingParts(
   };
 }
 
-export function formatTimeRemaining(endTime: string | undefined, nowMs: number) {
+export function formatTimeRemaining(
+  endTime: string | undefined,
+  nowMs: number
+) {
   const parts = getTimeRemainingParts(endTime, nowMs);
   if (!parts) return '';
   if (parts.isClosed) return 'Voting closed';

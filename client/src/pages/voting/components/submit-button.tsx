@@ -19,7 +19,7 @@ export function SubmitButton({
   onSubmit,
 }: SubmitButtonProps) {
   const canSubmit = selectedCount >= minimumRequiredCount && totalCount > 0;
-  
+
   return (
     <Button
       onClick={onSubmit}
@@ -27,11 +27,7 @@ export function SubmitButton({
       variant="default"
       size="lg"
     >
-      {isSubmitting ? (
-        <IconRefresh className="animate-spin" />
-      ) : (
-        <IconUpload />
-      )}
+      {isSubmitting ? <IconRefresh className="animate-spin" /> : <IconUpload />}
       {isSubmitting ? 'Submitting…' : 'Submit'}
     </Button>
   );

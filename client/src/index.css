@@ -58,7 +58,7 @@
 
 :root {
   --background: var(--color-gray-900);
-  --foreground: var(--color-gray-100);
+  --foreground: var(--color-gray-50);
   --card: var(--color-gray-950);
   --card-foreground: var(--color-gray-100);
   --popover: var(--color-gray-900);

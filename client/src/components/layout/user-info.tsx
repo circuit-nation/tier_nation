@@ -43,7 +43,15 @@ export default function UserInfo() {
   }
 
   if (!isAuthenticated || !user) {
-    return <Button onClick={login}>Login</Button>;
+    return (
+      <Button
+        size="lg"
+        onClick={login}
+        className="flex items-center justify-center"
+      >
+        Login
+      </Button>
+    );
   }
 
   return (

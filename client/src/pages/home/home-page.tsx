@@ -8,7 +8,7 @@ export function HomePage() {
   const visibleLists = votingLists.filter((list) => list.isVisible);
 
   return (
-    <div className="min-h-screen space-y-24 py-18 md:py-24">
+    <div className="min-h-screen space-y-10 px-5 py-10 md:py-12">
       <Hero />
       <ListsSpotlight list={f1List} lists={visibleLists} />
       <CTAStrip />
