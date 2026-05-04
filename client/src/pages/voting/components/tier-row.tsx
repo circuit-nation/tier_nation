@@ -49,12 +49,12 @@ export function TierRow({
         <div
           className={cn(`flex-1`, `border border-muted p-2 overflow-y-auto`)}
         >
-          <div className="flex flex-wrap gap-1 sm:gap-2">
+          <div className="flex flex-wrap gap-0.5">
             {entities.map((entity) => (
               <EntityCard
                 key={entity.id}
                 entity={entity}
-                className="w-22 sm:w-24"
+                mode="compact"
                 dragProps={draggableProps}
                 isDragging={activeEntityId === entity.id}
               />

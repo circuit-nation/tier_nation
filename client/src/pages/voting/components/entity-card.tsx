@@ -6,6 +6,7 @@ import type { Entity } from '@/types';
 type EntityCardProps = {
   entity: Entity;
   className?: string;
+  mode?: 'default' | 'compact';
   isDragging?: boolean;
   dragProps?: Pick<
     ButtonHTMLAttributes<HTMLButtonElement>,
@@ -16,20 +17,26 @@ type EntityCardProps = {
 export function EntityCard({
   entity,
   className,
+  mode = 'default',
   isDragging = false,
   dragProps,
 }: EntityCardProps) {
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const isCompact = mode === 'compact';
 
   const fallbackLabel = useMemo(() => {
-    return entity.name
-      .split(' ')
-      .filter(Boolean)
+    const parts = entity.name.split(' ').filter(Boolean);
+    if (isCompact) {
+      const source = parts[parts.length - 1] ?? entity.name;
+      return source.slice(0, 3).toUpperCase();
+    }
+
+    return parts
       .map((part) => part[0])
       .join('')
       .slice(0, 2)
       .toUpperCase();
-  }, [entity.name]);
+  }, [entity.name, isCompact]);
 
   const showImage =
     Boolean(entity.imageUrl) && failedImageUrl !== entity.imageUrl;
@@ -39,16 +46,18 @@ export function EntityCard({
       type="button"
       data-entity-id={entity.id}
       className={cn(
-        'group flex w-full flex-col items-center gap-2 text-center transition-all rounded-md',
+        'group',
         dragProps?.draggable && 'cursor-grab active:cursor-grabbing',
-        isDragging &&
-          'z-20 scale-[1.01] border-primary/55 bg-card shadow-lg',
+        isDragging && 'z-20 bg-card shadow-lg',
         className
       )}
       {...dragProps}
     >
       <div
-        className={`size-14 md:size-24 flex items-center justify-center overflow-hidden rounded-sm border border-border/80 bg-muted/25`}
+        className={cn(
+          'flex items-center justify-center overflow-hidden rounded-sm border border-border/80 bg-muted/25',
+          'size-14 md:size-22'
+        )}
       >
         {showImage ? (
           <img
@@ -64,9 +73,11 @@ export function EntityCard({
           </p>
         )}
       </div>
-      <p className="line-clamp-2 text-xs font-semibold text-foreground">
-        {entity.name}
-      </p>
+      {!isCompact && (
+        <p className="line-clamp-2 text-xs font-semibold text-foreground">
+          {entity.name}
+        </p>
+      )}
     </button>
   );
 }

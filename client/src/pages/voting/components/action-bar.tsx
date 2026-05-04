@@ -6,7 +6,7 @@ import {
 } from '@/lib/countdown';
 import { postVotes } from '@/lib/mock/votes';
 import { validateVotePayload } from '@/lib/validation/voteSchema';
-// import type { TierValue } from '@/types';
+import type { Vote } from '@/types';
 import { Button } from '@/components/ui/button';
 import { IconRestore, IconShare } from '@tabler/icons-react';
 import { SubmitButton } from '@/pages/voting/components/submit-button';
@@ -19,9 +19,10 @@ import {
 
 type ActionBarProps = {
   listId: string;
+  onSubmitted?: (payload: Vote[]) => void | Promise<void>;
 };
 
-export default function ActionBar({ listId }: ActionBarProps) {
+export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
   const [submitMessage, setSubmitMessage] = useState<string>('');
   const [submitError, setSubmitError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,25 +41,6 @@ export default function ActionBar({ listId }: ActionBarProps) {
     buildVotePayload,
   } = useVoting(listId);
   const countdownLabel = formatTimeRemaining(list.endTime, nowMs);
-
-  // const tierScores = useMemo(() => {
-  //   const scoreMap = {
-  //     S: 0,
-  //     A: 0,
-  //     B: 0,
-  //     C: 0,
-  //     D: 0,
-  //     E: 0,
-  //     F: 0,
-  //   } satisfies Record<TierValue, number>;
-  //   for (const tier of list.tiers) scoreMap[tier.value] = tier.score;
-  //   return scoreMap;
-  // }, [list.tiers]);
-
-  // const maxTierScore = useMemo(
-  //   () => Math.max(...list.tiers.map((t) => t.score), 0),
-  //   [list.tiers]
-  // );
 
   const handleSubmit = async () => {
     if (!canSubmit) {
@@ -87,6 +69,7 @@ export default function ActionBar({ listId }: ActionBarProps) {
       setSubmitMessage(
         `Submitted ${payload.length} vote placements at ${submittedAt}`
       );
+      await onSubmitted?.(payload);
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : 'Submission failed');
     } finally {
@@ -98,7 +81,7 @@ export default function ActionBar({ listId }: ActionBarProps) {
     <div className="space-y-2">
       <Separator orientation="horizontal" />
       <section>
-        <div className="flex flex-row items-center justify-between gap-3">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           {countdownLabel && (
             <p className="tabular-nums font-grotesk text-muted-foreground">
               {countdownLabel}

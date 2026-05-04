@@ -100,7 +100,6 @@ export function EntityPool({
                 <EntityCard
                   entity={entity}
                   className={cn(
-                    'w-fit transition-opacity duration-150',
                     entity.placed && 'opacity-40'
                   )}
                   dragProps={entity.placed ? undefined : draggableProps}
@@ -109,7 +108,7 @@ export function EntityPool({
 
                 {/* Placed checkmark overlay */}
                 {entity.placed && (
-                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <div className="pointer-events-none absolute top-4 sm:top-8 inset-x-0 flex items-center justify-center">
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
                       <IconCheck size={14} stroke={2.5} />
                     </div>
