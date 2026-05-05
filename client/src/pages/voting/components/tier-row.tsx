@@ -36,7 +36,7 @@ export function TierRow({
       <div className={cn(`flex max-h-48 sm:max-h-72`)}>
         <div
           className={cn(
-            `aspect-square w-16 md:w-28 `,
+            `aspect-square w-16 md:w-28`,
             `text-center text-2xl md:text-4xl text-black font-bold font-grotesk flex items-center justify-center`,
             `rounded-tl-md rounded-bl-md`,
             TIER_ACCENT_BY_VALUE[tier.value]
@@ -47,9 +47,12 @@ export function TierRow({
 
         {/* Entity Dropzone */}
         <div
-          className={cn(`flex-1`, `border border-muted p-2.5 overflow-y-auto`)}
+          className={cn(
+            `flex-1`,
+            `border border-muted p-2 overflow-y-auto rounded-r-md`
+          )}
         >
-          <div className="flex flex-wrap gap-0.5">
+          <div className="flex flex-wrap gap-1 sm:gap-2">
             {entities.map((entity) => (
               <EntityCard
                 key={entity.id}
@@ -62,8 +65,8 @@ export function TierRow({
           </div>
 
           {entities.length === 0 ? (
-            <p className="flex items-center justify-center h-full text-xs sm:text-sm font-medium text-muted-foreground">
-              Drop entities here
+            <p className="flex items-center justify-center h-full text-xs sm:text-sm text-muted-foreground">
+              Drop items here
             </p>
           ) : null}
         </div>

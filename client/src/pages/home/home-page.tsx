@@ -1,7 +1,6 @@
 import { f1List, votingLists } from '@/lib/mock/lists';
 import { ListsSpotlight } from './components/lists-preview';
 import { CommunityCTA } from './components/cn-cta';
-import { CTAStrip } from './components/tn-cta';
 import { Hero } from './components/hero';
 
 export function HomePage() {
@@ -11,7 +10,6 @@ export function HomePage() {
     <div className="min-h-screen space-y-10 px-5 py-10 md:py-12">
       <Hero />
       <ListsSpotlight list={f1List} lists={visibleLists} />
-      <CTAStrip />
       <CommunityCTA />
     </div>
   );

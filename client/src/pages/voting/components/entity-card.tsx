@@ -56,7 +56,7 @@ export function EntityCard({
       <div
         className={cn(
           'flex items-center justify-center overflow-hidden rounded-sm border border-border/80 bg-muted/25',
-          'size-14 md:size-22'
+          'size-12 md:size-24'
         )}
       >
         {showImage ? (
@@ -73,8 +73,9 @@ export function EntityCard({
           </p>
         )}
       </div>
+
       {!isCompact && (
-        <p className="line-clamp-2 text-xs font-semibold text-foreground">
+        <p className="text-xs sm:text-sm font-medium text-foreground leading-tight line-clamp-1 sm:line-clamp-2">
           {entity.name}
         </p>
       )}

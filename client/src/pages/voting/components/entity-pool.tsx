@@ -93,8 +93,8 @@ export function EntityPool({
         </div>
 
         {/* Scrollable strip */}
-        <div className="relative overflow-x-auto">
-          <div className="flex flex-row gap-4">
+        <div className="relative overflow-x-auto no-scrollbar">
+          <div className="relative flex flex-row gap-4">
             {sortedPool.map((entity) => (
               <div key={entity.id} className="relative">
                 <EntityCard
@@ -116,6 +116,10 @@ export function EntityPool({
             ))}
           </div>
         </div>
+
+        <p className="pt-3 text-muted-foreground text-center">
+          Use buttons or scroll to select items.
+        </p>
       </div>
     </div>
   );

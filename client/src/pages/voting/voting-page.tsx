@@ -94,26 +94,31 @@ export function VotingPage() {
   return (
     // pb-28/pb-40 reserves space so the fixed pool doesn't overlap content
     <div
-      className={hasComparison ? 'space-y-4' : 'space-y-4 py-10 pb-28 sm:pb-40'}
+      className={
+        hasComparison ? 'space-y-4' : 'space-y-4 py-10 pb-28 sm:pb-40 px-5'
+      }
     >
       <section className="space-y-10">
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="*:flex-1 max-w-4xl text-center md:text-left space-y-4">
-            <p className="text-sm font-grotesk">
+            <p className="text-sm sm:text-base font-grotesk">
               {isLive && <LiveIndicator variant="pill" size="sm" />}{' '}
               {list.startTime
                 ? getRelativeTime(list.startTime)
                 : 'Schedule TBA'}
             </p>
+
             <div>
-              <p className="text-4xl md:text-5xl font-sans font-semibold">
+              <h1 className="text-4xl md:text-5xl font-sans font-semibold">
                 {list.name}
-              </p>
-              <p className="text-lg font-medium font-grotesk text-muted-foreground">
+              </h1>
+
+              <h2 className="text-xl font-light font-sans text-muted-foreground">
                 {list.description}
-              </p>
+              </h2>
             </div>
           </div>
+
           {!hasComparison ? (
             <div>
               <ActionBar listId={list.id} onSubmitted={handleSubmitted} />
