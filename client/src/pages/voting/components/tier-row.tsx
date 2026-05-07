@@ -10,10 +10,11 @@ import type { Entity, Tier } from '@/types';
 type TierRowProps = {
   tier: Tier;
   entities: Entity[];
-  draggableProps: NativeDraggableProps;
-  dropzoneProps: NativeDropzoneProps;
-  activeEntityId: string | null;
-  isOver: boolean;
+  draggableProps?: NativeDraggableProps;
+  dropzoneProps?: NativeDropzoneProps;
+  activeEntityId?: string | null;
+  isOver?: boolean;
+  emptyMessage?: string;
 };
 
 export function TierRow({
@@ -22,12 +23,13 @@ export function TierRow({
   draggableProps,
   dropzoneProps,
   activeEntityId,
-  isOver,
+  isOver = false,
+  emptyMessage = 'Drop items here',
 }: TierRowProps) {
   return (
     <section
-      data-destination={tier.value}
-      {...dropzoneProps}
+      data-destination={dropzoneProps ? tier.value : undefined}
+      {...(dropzoneProps ?? {})}
       className={cn(
         'rounded-md transition-all ',
         isOver && 'ring-2 ring-ring/55'
@@ -66,7 +68,7 @@ export function TierRow({
 
           {entities.length === 0 ? (
             <p className="flex items-center justify-center h-full text-xs sm:text-sm text-muted-foreground">
-              Drop items here
+              {emptyMessage}
             </p>
           ) : null}
         </div>

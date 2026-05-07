@@ -6,6 +6,7 @@ import { LIVE_LIST_ID } from '@/lib/constants';
 import { AuthCallbackPage } from '@/pages/auth/callback-page';
 import { LoginPage } from '@/pages/auth/login-page';
 import { HomePage } from '@/pages/home/home-page';
+import { ResultsPage } from '@/pages/voting/results-page';
 import { VotingPage } from '@/pages/voting/voting-page';
 // import { RequireAuth } from '@/components/auth/require-auth';
 
@@ -36,6 +37,10 @@ export const router = createBrowserRouter([
       {
         path: 'voting/:listId',
         element: <VotingPage />,
+      },
+      {
+        path: 'results/:id',
+        element: <ResultsPage />,
       },
       {
         path: '*',
