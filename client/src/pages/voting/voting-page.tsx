@@ -36,9 +36,7 @@ export function VotingPage() {
 
   return (
     // pb-28/pb-40 reserves space so the fixed pool doesn't overlap content
-    <div
-      className="space-y-4 py-10 pb-28 sm:pb-40 px-5"
-    >
+    <div className="space-y-4 py-10 pb-28 sm:pb-40 px-5">
       <section className="space-y-10">
         <div className="space-y-3">
           <div className="*:flex-1 max-w-4xl text-center md:text-left space-y-4">

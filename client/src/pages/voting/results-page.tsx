@@ -47,9 +47,10 @@ export function ResultsPage() {
       const userVotes = votes.filter((vote) => vote.userId === mockUserId);
       if (userVotes.length === 0) return [];
 
-      const latestTimestamp = userVotes.reduce((latest, vote) =>
-        vote.createdAt > latest ? vote.createdAt : latest
-      , userVotes[0].createdAt);
+      const latestTimestamp = userVotes.reduce(
+        (latest, vote) => (vote.createdAt > latest ? vote.createdAt : latest),
+        userVotes[0].createdAt
+      );
 
       return userVotes.filter((vote) => vote.createdAt === latestTimestamp);
     };
@@ -58,7 +59,8 @@ export function ResultsPage() {
       setErrorMessage('');
       const listVotes = await getVotesByList(list.id);
       const fallbackUserVotes = resolveLatestUserVotes(listVotes);
-      const userBoard = routeState?.userBoard ?? mapVotesToBoard(fallbackUserVotes);
+      const userBoard =
+        routeState?.userBoard ?? mapVotesToBoard(fallbackUserVotes);
       const community = buildCommunityBoard(listVotes, tierScores);
 
       setResult({
@@ -82,7 +84,9 @@ export function ResultsPage() {
           <div className="*:flex-1 max-w-4xl text-center md:text-left space-y-4">
             <p className="text-sm sm:text-base font-grotesk">
               {isLive && <LiveIndicator variant="pill" size="sm" />}{' '}
-              {list.startTime ? getRelativeTime(list.startTime) : 'Schedule TBA'}
+              {list.startTime
+                ? getRelativeTime(list.startTime)
+                : 'Schedule TBA'}
             </p>
 
             <div>

@@ -40,13 +40,13 @@ export function TierBoard({
             tier={tier}
             entities={entities}
             draggableProps={draggableProps}
-              dropzoneProps={dropzoneProps}
-              activeEntityId={activeEntityId}
-              isOver={overDestination === tier.value}
-              emptyMessage={emptyMessage}
-            />
-          );
-        })}
+            dropzoneProps={dropzoneProps}
+            activeEntityId={activeEntityId}
+            isOver={overDestination === tier.value}
+            emptyMessage={emptyMessage}
+          />
+        );
+      })}
     </div>
   );
 }

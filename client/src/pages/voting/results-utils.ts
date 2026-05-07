@@ -3,11 +3,15 @@ import {
   calculateVoteAverages,
   type VoteAverages,
 } from '@/lib/mock/votes';
-import { TIER_VALUES, type Tier, type TierBoardState, type TierValue, type Vote } from '@/types';
+import {
+  TIER_VALUES,
+  type Tier,
+  type TierBoardState,
+  type TierValue,
+  type Vote,
+} from '@/types';
 
-export const buildTierScores = (
-  tiers: Tier[]
-): Record<TierValue, number> => {
+export const buildTierScores = (tiers: Tier[]): Record<TierValue, number> => {
   const scoreMap = Object.fromEntries(
     TIER_VALUES.map((tierValue) => [tierValue, 0])
   ) as Record<TierValue, number>;
