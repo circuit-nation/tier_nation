@@ -18,7 +18,7 @@ export const f1List: List = {
   isLocked: false,
   isVisible: true,
   startTime: '2026-03-01T00:00:00.000Z',
-  endTime: '2026-02-04T09:59:59.000Z',
+  endTime: '2026-12-31T09:59:59.000Z',
   tiers: tierConfig,
 };
 
@@ -41,5 +41,15 @@ export const votingLists: List[] = [
     isLocked: true,
     isVisible: true,
     tiers: tierConfig,
+  },
+  {
+    id: 'f1-legend-vote',
+    name: 'All-Time F1 Legends',
+    description: 'Community event. Opens next week.',
+    isLocked: false,
+    isVisible: true,
+    tiers: tierConfig,
+    startTime: '2026-04-01T00:00:00.000Z',
+    endTime: '2026-05-31T23:59:59.000Z',
   },
 ];

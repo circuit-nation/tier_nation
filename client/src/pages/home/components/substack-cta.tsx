@@ -1,0 +1,53 @@
+import { Button } from '@/components/ui/button';
+import { IconArrowRight } from '@tabler/icons-react';
+import { Link } from 'react-router-dom';
+
+export function SubstackCTA() {
+  return (
+    <section className="relative overflow-hidden">
+      <div className="relative z-10 mx-auto max-w-7xl">
+        <div className="relative space-y-6 overflow-hidden rounded-lg border border-white/10 px-8 py-16 backdrop-blur-xl md:px-16">
+          {/* Decorative blur */}
+          <div className="absolute -left-16 top-10 h-40 w-40 rounded-full bg-tier-s/10 blur-3xl" />
+          <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-tier-f/10 blur-3xl" />
+
+          {/* Heading */}
+          <div className="mx-auto max-w-4xl text-center space-y-4 font-grotesk">
+            <h2 className="text-[clamp(42px,7vw,84px)] font-black uppercase leading-[0.95] tracking-[-0.04em] text-[#EEEEF3]">
+              Read the
+              <span className="relative mx-3 inline-block text-primary">
+                latest
+              </span>
+              from the pitwall
+            </h2>
+          </div>
+
+          {/* CTA buttons */}
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button asChild size="lg" className="text-sm font-semibold">
+              <Link
+                to="https://circuitnation.substack.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                Read on Substack
+                <IconArrowRight
+                  size={18}
+                  className="transition-transform duration-300 group-hover:translate-x-1"
+                />
+              </Link>
+            </Button>
+          </div>
+
+          {/* Bottom stat row */}
+          <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-[#72727D]">
+            <div>Weekly articles</div>
+            <div>No spam, unsubscribe anytime</div>
+            <div>Built for motorsport fans</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

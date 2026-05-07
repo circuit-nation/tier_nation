@@ -119,4 +119,33 @@
     @apply bg-background text-foreground;
     font-family: 'DM Sans Variable', sans-serif;
   }
+
+  /* Minimal modern scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gray-600) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+
+  *::-webkit-scrollbar-track {
+    border: 0;
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    @apply rounded-md bg-transparent;
+    border: 1px solid #666c6f;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    @apply bg-secondary;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 }

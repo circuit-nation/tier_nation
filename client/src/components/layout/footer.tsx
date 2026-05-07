@@ -9,7 +9,7 @@ export function Footer() {
             {constants.APP_NAME}
           </span>
           <span className="text-xs text-[#3E3E4A]">
-            · Built at {constants.COMMUNITY_NAME}
+            · Built at {constants.COMMUNITY_NAME} · {new Date().getFullYear()}
           </span>
         </div>
         <p className="text-xs text-[#3E3E4A]">
