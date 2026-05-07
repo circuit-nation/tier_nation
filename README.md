@@ -13,6 +13,8 @@ A dynamic ranking platform by Circuit Nation where motorsport fans can explore a
     - [ ] Create API to add entities
 - [ ] Submission related APIs
     - [ ] Allow submission as anonymous
+- [ ] List related APIs
+    - [ ] Archive lists	
 
 #### Client
 - [x] Basic layout and drag drop functionality
