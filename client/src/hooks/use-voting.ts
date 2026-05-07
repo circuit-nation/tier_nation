@@ -4,7 +4,7 @@ import { MIN_SUBMIT_DRIVER_RATIO } from '@/lib/constants';
 import { drivers } from '@/lib/mock/drivers';
 import { f1List, votingLists } from '@/lib/mock/lists';
 import { useVotingStore, type BoardDestination } from '@/store/voting-store';
-import { TIER_VALUES, type Entity, type Vote } from '@/types';
+import { TIER_VALUES, type Entity, type PoolEntity, type Vote } from '@/types';
 
 const entityLookup = drivers.reduce<Record<string, Entity>>((acc, entity) => {
   acc[entity.id] = entity;
@@ -17,10 +17,7 @@ export function useVoting(listId?: string) {
   const resetBoard = useVotingStore((state) => state.resetBoard);
 
   const list = useMemo(() => {
-    if (!listId) {
-      return f1List;
-    }
-
+    if (!listId) return f1List;
     return votingLists.find((item) => item.id === listId) ?? f1List;
   }, [listId]);
 
@@ -32,8 +29,11 @@ export function useVoting(listId?: string) {
     return new Set(Object.values(board).flat());
   }, [board]);
 
-  const pool = useMemo(() => {
-    return drivers.filter((driver) => !assignedIds.has(driver.id));
+  const pool = useMemo<PoolEntity[]>(() => {
+    return drivers.map((driver) => ({
+      ...driver,
+      placed: assignedIds.has(driver.id),
+    }));
   }, [assignedIds]);
 
   const selectedCount = useMemo(() => {
@@ -50,16 +50,16 @@ export function useVoting(listId?: string) {
   const buildVotePayload = (userId: string): Vote[] => {
     const createdAt = new Date().toISOString();
 
-    return TIER_VALUES.flatMap((tier) => {
-      return board[tier].map((entityId, index) => ({
+    return TIER_VALUES.flatMap((tier) =>
+      board[tier].map((entityId, index) => ({
         id: `${list.id}-${entityId}-${index}`,
         userId,
         listId: list.id,
         entityId,
         tier,
         createdAt,
-      }));
-    });
+      }))
+    );
   };
 
   return {

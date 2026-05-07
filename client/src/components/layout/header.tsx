@@ -1,24 +1,31 @@
 import { Link } from 'react-router-dom';
 
 import logo from '@/assets/logo.svg';
-import { APP_NAME } from '@/lib/constants';
+import * as constants from '@/lib/constants';
+import UserInfo from './user-info';
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/20 bg-background/90 p-2 backdrop-blur sm:px-5">
-      <div className="mx-auto max-w-6xl items-center gap-3">
+    <header className="sticky top-0 z-40 bg-background/60 p-2 backdrop-blur-sm *:sm:px-5 border-b border-border">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
         <Link
           to="/"
-          className="inline-flex items-center justify-self-center gap-2 rounded-xl px-4 py-3 text-center font-heading text-lg font-bold tracking-wide text-foreground transition-colors hover:text-primary sm:text-xl"
+          className="group flex flex-row gap-2 items-center justify-center"
         >
           <img
             src={logo}
-            alt={`${APP_NAME} logo`}
+            alt={`${constants.APP_NAME} logo`}
             className="size-8 rounded-md object-cover sm:size-9"
           />
-          <span>{APP_NAME}</span>
+
+          <h2 className="text-xl font-semibold font-sans uppercase group-hover:text-primary">
+            {constants.APP_NAME}
+          </h2>
         </Link>
-        <div aria-hidden="true" />
+
+        <div className="flex items-center gap-3">
+          <UserInfo />
+        </div>
       </div>
     </header>
   );

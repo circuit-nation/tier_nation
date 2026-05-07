@@ -10,10 +10,11 @@ type TierBoardProps = {
   tiers: Tier[];
   board: TierBoardState;
   entitiesById: Record<string, Entity>;
-  draggableProps: NativeDraggableProps;
-  dropzoneProps: NativeDropzoneProps;
-  activeEntityId: string | null;
-  overDestination: BoardDestination | null;
+  draggableProps?: NativeDraggableProps;
+  dropzoneProps?: NativeDropzoneProps;
+  activeEntityId?: string | null;
+  overDestination?: BoardDestination | null;
+  emptyMessage?: string;
 };
 
 export function TierBoard({
@@ -24,6 +25,7 @@ export function TierBoard({
   dropzoneProps,
   activeEntityId,
   overDestination,
+  emptyMessage,
 }: TierBoardProps) {
   return (
     <div className="space-y-2">
@@ -41,6 +43,7 @@ export function TierBoard({
             dropzoneProps={dropzoneProps}
             activeEntityId={activeEntityId}
             isOver={overDestination === tier.value}
+            emptyMessage={emptyMessage}
           />
         );
       })}

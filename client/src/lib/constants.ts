@@ -1,8 +1,11 @@
 import type { TierValue } from '@/types';
 
 export const APP_NAME = 'Tier Nation';
+export const COMMUNITY_NAME = 'Circuit Nation';
 export const LIVE_LIST_ID = 'f1-2026';
 export const MIN_SUBMIT_DRIVER_RATIO = 0.6;
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/v1';
 
 export const TIER_ACCENT_BY_VALUE: Record<TierValue, string> = {
   S: 'bg-tier-s',
@@ -12,4 +15,14 @@ export const TIER_ACCENT_BY_VALUE: Record<TierValue, string> = {
   D: 'bg-tier-d',
   E: 'bg-tier-e',
   F: 'bg-tier-f',
+};
+
+export const TIER_BORDER_BY_VALUE: Record<TierValue, string> = {
+  S: 'border-tier-s',
+  A: 'border-tier-a',
+  B: 'border-tier-b',
+  C: 'border-tier-c',
+  D: 'border-tier-d',
+  E: 'border-tier-e',
+  F: 'border-tier-f',
 };

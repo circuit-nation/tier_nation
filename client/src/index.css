@@ -7,7 +7,8 @@
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: 'Inter Variable', sans-serif;
+  --font-sans: 'DM Sans Variable', sans-serif;
+  --font-grotesk: 'Space Grotesk Variable', sans-serif;
   --color-tier-s: var(--tier-s);
   --color-tier-a: var(--tier-a);
   --color-tier-b: var(--tier-b);
@@ -56,29 +57,29 @@
 }
 
 :root {
-  --background: var(--color-neutral-950);
-  --foreground: var(--color-neutral-100);
-  --card: var(--color-neutral-950);
-  --card-foreground: var(--color-neutral-100);
-  --popover: var(--color-neutral-900);
-  --popover-foreground: var(--color-neutral-100);
-  --primary: oklch(65.757% 0.22898 28.701);
-  --primary-foreground: var(--color-neutral-950);
-  --secondary: var(--color-neutral-800);
-  --secondary-foreground: var(--color-neutral-100);
-  --muted: var(--color-neutral-800);
-  --muted-foreground: var(--color-neutral-400);
-  --accent: var(--color-neutral-700);
-  --accent-foreground: var(--color-neutral-100);
-  --destructive: var(--primary);
-  --border: var(--color-neutral-700);
-  --input: var(--color-neutral-700);
-  --ring: var(--color-neutral-400);
-  --chart-1: var(--color-neutral-300);
-  --chart-2: var(--color-neutral-400);
-  --chart-3: var(--color-neutral-500);
-  --chart-4: var(--color-neutral-600);
-  --chart-5: var(--color-neutral-700);
+  --background: var(--color-gray-900);
+  --foreground: var(--color-gray-50);
+  --card: var(--color-gray-950);
+  --card-foreground: var(--color-gray-100);
+  --popover: var(--color-gray-900);
+  --popover-foreground: var(--color-gray-100);
+  --primary: var(--color-blue-500);
+  --primary-foreground: var(--color-gray-950);
+  --secondary: var(--color-gray-800);
+  --secondary-foreground: var(--color-gray-100);
+  --muted: var(--color-gray-800);
+  --muted-foreground: var(--color-gray-400);
+  --accent: var(--color-gray-700);
+  --accent-foreground: var(--color-gray-100);
+  --destructive: var(--color-red-500);
+  --border: var(--color-gray-700);
+  --input: var(--color-gray-700);
+  --ring: var(--color-gray-400);
+  --chart-1: var(--color-gray-300);
+  --chart-2: var(--color-gray-400);
+  --chart-3: var(--color-gray-500);
+  --chart-4: var(--color-gray-600);
+  --chart-5: var(--color-gray-700);
   --tier-s: oklch(74.5% 0.16 24);
   --tier-a: oklch(79.8% 0.13 57);
   --tier-b: oklch(86.5% 0.12 95);
@@ -87,23 +88,64 @@
   --tier-e: oklch(82.3% 0.14 146);
   --tier-f: oklch(82.4% 0.1 202);
   --radius: 0.45rem;
-  --sidebar: var(--color-neutral-900);
-  --sidebar-foreground: var(--color-neutral-100);
+  --sidebar: var(--color-gray-900);
+  --sidebar-foreground: var(--color-gray-100);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--color-neutral-800);
-  --sidebar-accent-foreground: var(--color-neutral-100);
-  --sidebar-border: var(--color-neutral-700);
-  --sidebar-ring: var(--color-neutral-400);
+  --sidebar-accent: var(--color-gray-800);
+  --sidebar-accent-foreground: var(--color-gray-100);
+  --sidebar-border: var(--color-gray-700);
+  --sidebar-ring: var(--color-gray-400);
 }
 
 .dark {
   color-scheme: dark;
 }
 
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
 @layer base {
   body {
     @apply bg-background text-foreground;
     font-family: 'DM Sans Variable', sans-serif;
+  }
+
+  /* Minimal modern scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gray-600) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+
+  *::-webkit-scrollbar-track {
+    border: 0;
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    @apply rounded-md bg-transparent;
+    border: 1px solid #666c6f;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    @apply bg-secondary;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
   }
 }

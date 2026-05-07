@@ -10,6 +10,9 @@ import '@fontsource-variable/dm-sans/opsz-italic.css';
 import '@fontsource-variable/dm-sans/wght.css';
 import '@fontsource-variable/dm-sans/wght-italic.css';
 
+// Font Space Grotesk
+import '@fontsource-variable/space-grotesk/wght.css';
+
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(

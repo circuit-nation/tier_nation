@@ -5,3 +5,7 @@ export type Entity = {
   team?: string;
   tags?: string[];
 };
+
+export interface PoolEntity extends Entity {
+  placed: boolean;
+}
