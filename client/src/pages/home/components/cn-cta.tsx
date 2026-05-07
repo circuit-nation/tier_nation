@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 export function CommunityCTA() {
   return (
     <section className="mx-auto max-w-7xl pt-12">
-      <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 p-8 lg:p-14">
+      <div className="relative overflow-hidden rounded-2xl bg-gray-900 p-8 lg:p-14">
         {/* Background image */}
         <div>
           <img
@@ -17,7 +17,7 @@ export function CommunityCTA() {
           />
 
           {/* Left fade / blend overlay */}
-          <div className="absolute inset-0 bg-linear-to-r from-gray-900 via-gray-900/80 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-r from-primary/40 via-primaryc/20 to-transparent" />
         </div>
         {/* Decorative corner */}
         <div className="pointer-events-none absolute left-0 top-0 h-44 w-44 rounded-br-full border-b border-r border-border/80 opacity-50" />
@@ -47,6 +47,7 @@ export function CommunityCTA() {
                 <IconArrowUpRight className="group-hover:transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </Link>
             </Button>
+
             <Button variant="default" size="lg" className="group" asChild>
               <Link
                 to="https://circuitnation.live"

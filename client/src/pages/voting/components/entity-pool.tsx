@@ -91,17 +91,19 @@ export function EntityPool({
         isOver && 'border-primary'
       )}
     >
-      <div className="mx-auto max-w-6xl px-6 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+      <div className="mx-auto max-w-7xl px-6 py-3">
         {/* Toolbar */}
-        <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="mb-2 flex items-center justify-end gap-2">
           <p className="text-sm sm:text-base tabular-nums">
             {remainingCount === 0
               ? 'All items ranked'
               : `${remainingCount}/${pool.length} remaining`}
           </p>
 
+          <p className="text-lg font-black opacity-80">·</p>
+
           <Button
-            variant="ghost"
+            variant="secondary"
             size="default"
             onClick={cycleSort}
             className={cn(
@@ -135,7 +137,7 @@ export function EntityPool({
               size="icon"
               aria-label="Scroll left"
               onClick={() => scrollBy('left')}
-              className="pointer-events-auto relative z-10 ml-1 size-7 rounded-full shadow-sm bg-background"
+              className="mb-4 -ml-4 pointer-events-auto relative z-10 size-8 sm:size-10 rounded-full shadow-sm bg-background"
             >
               <IconChevronLeft size={14} />
             </Button>
@@ -155,7 +157,7 @@ export function EntityPool({
               size="icon"
               aria-label="Scroll right"
               onClick={() => scrollBy('right')}
-              className="pointer-events-auto relative z-10 mr-1 size-7 rounded-full shadow-sm bg-background"
+              className="mb-4 -mr-4 pointer-events-auto relative z-10 size-8 sm:size-10 rounded-full shadow-sm bg-background"
             >
               <IconChevronRight size={14} />
             </Button>
@@ -166,7 +168,7 @@ export function EntityPool({
             onScroll={(e) => updateGradients(e.currentTarget)}
             className="overflow-x-auto no-scrollbar"
           >
-            <div className="relative flex flex-row gap-4">
+            <div className="relative flex flex-row gap-2">
               {sortedPool.map((entity) => (
                 <div key={entity.id} className="relative">
                   <EntityCard
@@ -190,7 +192,7 @@ export function EntityPool({
           </div>
         </div>
 
-        <p className="pt-3 text-xs sm:text-sm text-muted-foreground text-center">
+        <p className="mt-4 text-xs sm:text-sm text-muted-foreground text-center">
           Use buttons or scroll to select items.
         </p>
       </div>

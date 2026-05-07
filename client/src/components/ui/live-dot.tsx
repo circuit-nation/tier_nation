@@ -123,7 +123,6 @@ export default function LiveIndicator({
           font-size: ${s.text};
           font-weight: 500;
           letter-spacing: 0.12em;
-          animation: label-breath 2.5s ease-in-out infinite;
         }
         .live-broadcast .live-label {
           color: #fff;

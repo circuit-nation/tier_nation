@@ -75,7 +75,7 @@ export function EntityCard({
       </div>
 
       {!isCompact && (
-        <p className="text-xs sm:text-sm font-medium text-foreground leading-tight line-clamp-1 sm:line-clamp-2">
+        <p className="text-xs sm:text-sm text-center font-medium text-foreground wrap-break-word line-clamp-1">
           {entity.name}
         </p>
       )}

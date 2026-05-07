@@ -40,12 +40,17 @@ export function VotingPage() {
       <section className="space-y-10">
         <div className="space-y-3">
           <div className="*:flex-1 max-w-4xl text-center md:text-left space-y-4">
-            <p className="text-sm sm:text-base font-grotesk">
-              {isLive && <LiveIndicator variant="pill" size="sm" />}{' '}
-              {list.startTime
-                ? getRelativeTime(list.startTime)
-                : 'Schedule TBA'}
-            </p>
+            <div className="w-fit flex items-center justify-center gap-2">
+              <p className="text-xs sm:text-sm">
+                {isLive && <LiveIndicator variant="pill" size="sm" />}{' '}
+              </p>
+
+              <p className="text-xs sm:text-sm font-grotesk">
+                {list.startTime
+                  ? getRelativeTime(list.startTime)
+                  : 'Schedule TBA'}
+              </p>
+            </div>
 
             <div>
               <h1 className="text-4xl md:text-5xl font-sans font-semibold">

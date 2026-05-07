@@ -120,14 +120,15 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
                     <div
                       key={unit.key}
                       className={cn(
-                        'flex min-w-12 flex-row gap-x-0.5 items-center rounded-md px-2 py-1 tabular-nums',
+                        'flex min-w-12 flex-row gap-x-0.5 items-end rounded-md px-2 py-1 font-sans tabular-nums',
                         `${isLessThanOneHour ? 'bg-destructive/40' : 'bg-white/20'}`
                       )}
                     >
-                      <p className="text-base leading-none font-semibold">
+                      <p className="text-base leading-none font-medium">
                         {unit.value}
                       </p>
-                      <p className="text-xs leading-none tracking-wide lowercase">
+
+                      <p className="text-xs font-light leading-none tracking-wide lowercase">
                         {unit.label}
                       </p>
                     </div>

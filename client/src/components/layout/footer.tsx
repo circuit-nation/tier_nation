@@ -3,7 +3,7 @@ import * as constants from '@/lib/constants';
 export function Footer() {
   return (
     <footer className="border-t border-border">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-7">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-5">
         <div className="flex items-center gap-2">
           <p className="text-base font-bold uppercase">{constants.APP_NAME}</p>
         </div>

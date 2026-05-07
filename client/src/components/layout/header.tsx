@@ -10,14 +10,15 @@ export function Header() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
         <Link
           to="/"
-          className="flex flex-row gap-2 items-center justify-center"
+          className="group flex flex-row gap-2 items-center justify-center"
         >
           <img
             src={logo}
             alt={`${constants.APP_NAME} logo`}
             className="size-8 rounded-md object-cover sm:size-9"
           />
-          <h2 className="text-2xl font-medium font-sans">
+
+          <h2 className="text-xl font-semibold font-sans uppercase group-hover:text-primary">
             {constants.APP_NAME}
           </h2>
         </Link>
