@@ -2,7 +2,7 @@ import type {
   NativeDraggableProps,
   NativeDropzoneProps,
 } from '@/hooks/use-drag-drop';
-import { TIER_ACCENT_BY_VALUE } from '@/lib/constants';
+import { TIER_ACCENT_BY_VALUE, TIER_BORDER_BY_VALUE } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { EntityCard } from '@/pages/voting/components/entity-card';
 import type { Entity, Tier } from '@/types';
@@ -30,10 +30,7 @@ export function TierRow({
     <section
       data-destination={dropzoneProps ? tier.value : undefined}
       {...(dropzoneProps ?? {})}
-      className={cn(
-        'rounded-md transition-all ',
-        isOver && 'ring-2 ring-ring/55'
-      )}
+      className={cn('rounded-md transition-all ')}
     >
       <div className={cn(`flex max-h-48 sm:max-h-72`)}>
         <div
@@ -51,7 +48,8 @@ export function TierRow({
         <div
           className={cn(
             `flex-1`,
-            `border border-muted p-2 overflow-y-auto rounded-r-md`
+            `border border-border/80 p-2 overflow-y-auto rounded-r-md`,
+            isOver && TIER_BORDER_BY_VALUE[tier.value]
           )}
         >
           <div className="flex flex-wrap gap-1 sm:gap-2">

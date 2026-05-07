@@ -87,23 +87,22 @@ export function EntityPool({
       {...dropzoneProps}
       className={cn(
         'fixed inset-x-0 bottom-0 z-40',
-        'border-t border-border/80 bg-background',
-        'transition-colors duration-150',
-        isOver && 'border-primary/45 ring-2 ring-ring/45'
+        'border-t border-primary/60 bg-background',
+        isOver && 'border-primary'
       )}
     >
       <div className="mx-auto max-w-6xl px-6 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         {/* Toolbar */}
-        <div className="mb-2 flex items-center justify-end gap-3">
-          <p className="text-xs sm:text-sm font-medium tabular-nums">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <p className="text-sm sm:text-base tabular-nums">
             {remainingCount === 0
-              ? 'All entities placed'
+              ? 'All items ranked'
               : `${remainingCount}/${pool.length} remaining`}
           </p>
 
           <Button
             variant="ghost"
-            size="sm"
+            size="default"
             onClick={cycleSort}
             className={cn(
               'h-7 gap-1.5 px-2 text-xs sm:text-sm',
@@ -191,7 +190,7 @@ export function EntityPool({
           </div>
         </div>
 
-        <p className="pt-3 text-muted-foreground text-center">
+        <p className="pt-3 text-xs sm:text-sm text-muted-foreground text-center">
           Use buttons or scroll to select items.
         </p>
       </div>

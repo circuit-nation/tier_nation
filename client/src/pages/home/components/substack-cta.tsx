@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { IconArrowRight } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
+import substack from '@/assets/images/substack.svg';
 
 export function SubstackCTA() {
   return (
@@ -8,17 +9,15 @@ export function SubstackCTA() {
       <div className="relative z-10 mx-auto max-w-7xl">
         <div className="relative space-y-6 overflow-hidden rounded-lg border border-white/10 px-8 py-16 backdrop-blur-xl md:px-16">
           {/* Decorative blur */}
-          <div className="absolute -left-16 top-10 h-40 w-40 rounded-full bg-tier-s/10 blur-3xl" />
-          <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-tier-f/10 blur-3xl" />
+          <div className="absolute -left-16 top-10 h-40 -z-10 w-40 rounded-full bg-[#FF7731]/20 blur-3xl" />
+          <div className="absolute bottom-0 right-0 h-56 -z-10 w-56 rounded-full bg-[#ff6719]/40 blur-3xl" />
 
           {/* Heading */}
           <div className="mx-auto max-w-4xl text-center space-y-4 font-grotesk">
-            <h2 className="text-[clamp(42px,7vw,84px)] font-black uppercase leading-[0.95] tracking-[-0.04em] text-[#EEEEF3]">
-              Read the
-              <span className="relative mx-3 inline-block text-primary">
-                latest
-              </span>
-              from the pitwall
+            <h2 className="font-black uppercase text-5xl">
+              Read the {` `}
+              <span className="text-primary">latest</span>
+              {` `} from the pitwall
             </h2>
           </div>
 

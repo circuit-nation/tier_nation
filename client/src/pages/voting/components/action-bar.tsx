@@ -120,7 +120,7 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
                     <div
                       key={unit.key}
                       className={cn(
-                        'flex min-w-12 flex-row gap-x-0.5 items-center rounded-md px-1 py-1 tabular-nums',
+                        'flex min-w-12 flex-row gap-x-0.5 items-center rounded-md px-2 py-1 tabular-nums',
                         `${isLessThanOneHour ? 'bg-destructive/40' : 'bg-white/20'}`
                       )}
                     >

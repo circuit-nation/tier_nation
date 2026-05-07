@@ -16,3 +16,13 @@ export const TIER_ACCENT_BY_VALUE: Record<TierValue, string> = {
   E: 'bg-tier-e',
   F: 'bg-tier-f',
 };
+
+export const TIER_BORDER_BY_VALUE: Record<TierValue, string> = {
+  S: 'border-tier-s',
+  A: 'border-tier-a',
+  B: 'border-tier-b',
+  C: 'border-tier-c',
+  D: 'border-tier-d',
+  E: 'border-tier-e',
+  F: 'border-tier-f',
+};

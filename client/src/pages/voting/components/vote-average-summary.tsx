@@ -1,6 +1,7 @@
 import { IconUsers } from '@tabler/icons-react';
 import { TierBoard } from '@/pages/voting/components/tier-board';
 import type { Entity, Tier, TierBoardState } from '@/types';
+import { Badge } from '@/components/ui/badge';
 
 type VoteAverageSummaryProps = {
   tiers: Tier[];
@@ -20,14 +21,12 @@ export function VoteAverageSummary({
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3 border-b border-white/15 pb-3">
-          <div className="flex items-center gap-3">
-            <h2 className="font-sans text-3xl font-semibold tracking-tight">
+        <div className="flex items-center justify-between gap-3 pb-3">
+          <div className="flex items-center justify-between w-full gap-3">
+            <h2 className="font-sans text-2xl font-semibold tracking-tight">
               Your Votes
             </h2>
-            <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-muted-foreground">
-              FINALIZED
-            </span>
+            <Badge className="text-base">FINALIZED</Badge>
           </div>
         </div>
 
@@ -40,8 +39,8 @@ export function VoteAverageSummary({
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3 border-b border-white/15 pb-3">
-          <h2 className="font-sans text-3xl font-semibold tracking-tight">
+        <div className="flex items-center justify-between gap-3 pb-3">
+          <h2 className="font-sans text-2xl font-semibold tracking-tight">
             Community Avg
           </h2>
           <p className="flex items-center gap-1.5 text-muted-foreground">
@@ -56,7 +55,7 @@ export function VoteAverageSummary({
           tiers={tiers}
           board={communityBoard}
           entitiesById={entitiesById}
-          emptyMessage="No votes in this tier yet"
+          emptyMessage="No votes in this tier"
         />
       </section>
     </div>

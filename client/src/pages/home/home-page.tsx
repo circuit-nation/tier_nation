@@ -2,7 +2,6 @@ import { f1List, votingLists } from '@/lib/mock/lists';
 import { ListsSpotlight } from './components/lists-preview';
 import { CommunityCTA } from './components/cn-cta';
 import { Hero } from './components/hero';
-import { SubstackCTA } from './components/substack-cta';
 
 export function HomePage() {
   const visibleLists = votingLists.filter((list) => list.isVisible);
@@ -12,7 +11,6 @@ export function HomePage() {
       <Hero />
       <ListsSpotlight list={f1List} lists={visibleLists} />
       <CommunityCTA />
-      <SubstackCTA />
     </div>
   );
 }

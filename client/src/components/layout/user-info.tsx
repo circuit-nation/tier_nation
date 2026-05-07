@@ -57,7 +57,7 @@ export default function UserInfo() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="size-10 cursor-pointer border border-primary/60">
+        <Avatar className="size-10 cursor-pointer border border-primary/60 bg-gray-800/40 backdrop-blur-sm">
           <AvatarImage
             src={user.avatar_url ?? undefined}
             alt={user.name ?? 'User'}
@@ -104,16 +104,15 @@ export default function UserInfo() {
         <DropdownMenuSeparator />
 
         {/* Logout */}
-        <DropdownMenuItem asChild>
-          <Button
-            variant="destructive"
-            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-            onClick={handleLogout}
-          >
-            <LogOut className="size-4" />
-            Log out
-          </Button>
-        </DropdownMenuItem>
+        <Button
+          variant="destructive"
+          className="w-full"
+          onClick={handleLogout}
+          size="lg"
+        >
+          <LogOut className="size-4" />
+          Log out
+        </Button>
       </DropdownMenuContent>
     </DropdownMenu>
   );

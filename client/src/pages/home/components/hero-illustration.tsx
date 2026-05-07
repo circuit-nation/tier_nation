@@ -67,7 +67,7 @@ const FLOAT_CARDS: FloatCard[] = [
     rotate: '5deg',
     top: '15%',
     left: '50%',
-    skeletons: 2,
+    skeletons: 1,
     zIndex: 4,
   },
   {
@@ -79,7 +79,7 @@ const FLOAT_CARDS: FloatCard[] = [
     zIndex: 2,
   },
   {
-    tier: TIERS[3],
+    tier: TIERS[4],
     rotate: '-9deg',
     top: '50%',
     left: '30%',
@@ -92,7 +92,7 @@ function FloatingTierCard({ card }: { card: FloatCard }) {
   const { tier, rotate, top, left, skeletons, zIndex } = card;
   return (
     <div
-      className="absolute flex items-center gap-2 min-w-40 rounded-2xl border border-white/10 bg-[#16161C] px-3 py-2 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+      className="absolute flex items-center gap-2 min-w-40 rounded-2xl border border-white/10 bg-gray-900 pl-2 pr-3 py-2 shadow-xl"
       style={{ top, left, zIndex, transform: `rotate(${rotate})` }}
     >
       <div
@@ -103,7 +103,7 @@ function FloatingTierCard({ card }: { card: FloatCard }) {
 
       <div className="flex flex-1 flex-row gap-1.5">
         {Array.from({ length: skeletons }).map((_, i) => (
-          <div key={i} className="size-9 rounded-sm bg-foreground/20" />
+          <div key={i} className="size-9 rounded-sm bg-gray-800" />
         ))}
       </div>
     </div>

@@ -4,7 +4,7 @@ export function Hero() {
   return (
     <section className="flex flex-col lg:flex-row">
       <div className="flex-1 font-grotesk space-y-2">
-        <h1 className="text-5xl tracking-tight uppercase leading-none font-light">
+        <h1 className="text-6xl tracking-tight uppercase leading-none font-light">
           Every <span className="font-medium text-primary">Driver.</span>
           <br />
           Every <span className="font-medium text-primary">Track.</span>
