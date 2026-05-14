@@ -78,6 +78,7 @@ func (h *AuthHandler) GetUserInfo(ctx *gin.Context) {
 	user, err := h.authService.GetUser(userID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"user": user})

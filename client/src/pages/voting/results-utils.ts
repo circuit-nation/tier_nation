@@ -51,3 +51,45 @@ export const buildCommunityBoard = (
 
   return { board, totals };
 };
+
+function resolveAverageTier(
+  averageScore: number,
+  tierScores: Record<TierValue, number>
+): TierValue {
+  const sortedTierScores = TIER_VALUES.map((tier) => ({
+    tier,
+    score: tierScores[tier] ?? 0,
+  })).sort((a, b) => b.score - a.score);
+
+  let selectedTier = sortedTierScores[0]?.tier ?? 'F';
+  let smallestDistance = Number.POSITIVE_INFINITY;
+  let selectedTierScore = Number.NEGATIVE_INFINITY;
+
+  for (const tierScore of sortedTierScores) {
+    const distance = Math.abs(averageScore - tierScore.score);
+    if (
+      distance < smallestDistance ||
+      (distance === smallestDistance && tierScore.score > selectedTierScore)
+    ) {
+      smallestDistance = distance;
+      selectedTier = tierScore.tier;
+      selectedTierScore = tierScore.score;
+    }
+  }
+
+  return selectedTier;
+}
+
+/** Maps API entity-average rows (mean `tier_value` in 1–7 space) to the UI tier board. */
+export function buildCommunityBoardFromEntityAverages(
+  rows: { entityId: string; averageTierValue: number }[],
+  tierScores: Record<TierValue, number>
+): TierBoardState {
+  const board = createEmptyBoard();
+  for (const row of rows) {
+    const uiScore = 8 - row.averageTierValue;
+    const tier = resolveAverageTier(uiScore, tierScores);
+    board[tier].push(row.entityId);
+  }
+  return board;
+}

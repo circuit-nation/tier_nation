@@ -1,4 +1,9 @@
 import type { List, Tier } from '@/types';
+import { TIER_VALUES } from '@/types/tier';
+
+const defaultTiersConfig = {
+  tiers: TIER_VALUES.map((label, i) => ({ value: i + 1, label })),
+};
 
 const tierConfig: Tier[] = [
   { value: 'S', label: 'S', score: 7, order: 1 },
@@ -20,6 +25,7 @@ export const f1List: List = {
   startTime: '2026-03-01T00:00:00.000Z',
   endTime: '2026-12-31T09:59:59.000Z',
   tiers: tierConfig,
+  tiersConfig: defaultTiersConfig,
 };
 
 export const votingLists: List[] = [
@@ -31,6 +37,7 @@ export const votingLists: List[] = [
     isLocked: false,
     isVisible: true,
     tiers: tierConfig,
+    tiersConfig: defaultTiersConfig,
     startTime: '2026-04-01T00:00:00.000Z',
     endTime: '2026-08-31T23:59:59.000Z',
   },
@@ -41,6 +48,7 @@ export const votingLists: List[] = [
     isLocked: true,
     isVisible: true,
     tiers: tierConfig,
+    tiersConfig: defaultTiersConfig,
   },
   {
     id: 'f1-legend-vote',
@@ -49,6 +57,7 @@ export const votingLists: List[] = [
     isLocked: false,
     isVisible: true,
     tiers: tierConfig,
+    tiersConfig: defaultTiersConfig,
     startTime: '2026-04-01T00:00:00.000Z',
     endTime: '2026-05-31T23:59:59.000Z',
   },

@@ -13,11 +13,16 @@ import (
 )
 
 type Server struct {
-	router      *gin.Engine
-	config      *config.Config
-	authHandler *handlers.AuthHandler
-	db          *gorm.DB
-	jwtService  *services.JWTService
+	router              *gin.Engine
+	config              *config.Config
+	authHandler         *handlers.AuthHandler
+	listHandler         *handlers.ListHandler
+	submissionHandler   *handlers.SubmissionHandler
+	voteHandler         *handlers.VoteHandler
+	adminHandler        *handlers.AdminHandler
+	adminAuthService    *services.AdminAuthService
+	db                  *gorm.DB
+	jwtService          *services.JWTService
 }
 
 func NewServer(cfg *config.Config, db *gorm.DB) *Server {
@@ -29,20 +34,37 @@ func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 	authService := services.NewAuthService(cfg, db, jwtService)
 	authHandler := handlers.NewAuthHandler(authService, jwtService, cfg)
 
+	listService := services.NewListService(db)
+	entityService := services.NewEntityService(db)
+	submissionService := services.NewSubmissionService(db)
+	voteService := services.NewVoteService(db, listService)
+	aggregationService := services.NewAggregationService(db)
+	adminAuthService := services.NewAdminAuthService(cfg)
+
+	listHandler := handlers.NewListHandler(listService, aggregationService)
+	submissionHandler := handlers.NewSubmissionHandler(submissionService, listService)
+	voteHandler := handlers.NewVoteHandler(voteService)
+	adminHandler := handlers.NewAdminHandler(listService, entityService)
+
 	s := &Server{
-		router:      gin.New(),
-		config:      cfg,
-		authHandler: authHandler,
-		db:          db,
-		jwtService:  jwtService,
+		router:            gin.New(),
+		config:            cfg,
+		authHandler:       authHandler,
+		listHandler:       listHandler,
+		submissionHandler: submissionHandler,
+		voteHandler:       voteHandler,
+		adminHandler:      adminHandler,
+		adminAuthService:  adminAuthService,
+		db:                db,
+		jwtService:        jwtService,
 	}
 
 	s.router.Use(gin.Logger())
 	s.router.Use(gin.Recovery())
 
 	s.router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{cfg.ClientURL},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowOrigins:     cfg.CorsAllowedOrigins(),
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -69,12 +91,28 @@ func (s *Server) setupRoutes() {
 			auth.POST("/refresh", s.authHandler.Refresh)
 			auth.POST("/logout", s.authHandler.Logout)
 		}
-	}
 
-	protected := v1.Group("/")
-	protected.Use(middleware.AuthMiddleware(s.jwtService))
-	{
-		protected.GET("/me", s.authHandler.GetUserInfo)
+		v1.GET("/lists", s.listHandler.GetLists)
+		v1.GET("/lists/:id", s.listHandler.GetList)
+
+		protected := v1.Group("/")
+		protected.Use(middleware.AuthMiddleware(s.jwtService))
+		{
+			protected.GET("/me", s.authHandler.GetUserInfo)
+			protected.POST("/submissions", s.submissionHandler.CreateSubmission)
+			protected.POST("/votes", s.voteHandler.PostVotes)
+			protected.GET("/lists/:id/average-score", s.listHandler.GetAverageScore)
+			protected.GET("/lists/:id/entity-averages", s.listHandler.GetEntityAverages)
+		}
+
+		admin := v1.Group("/admin")
+		admin.Use(middleware.AdminBasicAuth(s.adminAuthService))
+		{
+			admin.POST("/lists", s.adminHandler.CreateTierList)
+			admin.POST("/entities", s.adminHandler.CreateEntities)
+			admin.POST("/lists/:id/entities", s.adminHandler.AddEntitiesToList)
+			admin.PATCH("/lists/:id/archive", s.adminHandler.ArchiveList)
+		}
 	}
 }
 

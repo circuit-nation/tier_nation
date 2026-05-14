@@ -31,6 +31,11 @@ func Connect(cfg *config.Config) (*gorm.DB, error) {
 	if err := db.AutoMigrate(
 		&models.User{},
 		&models.Session{},
+		&models.TierList{},
+		&models.Entity{},
+		&models.ListEntity{},
+		&models.Submission{},
+		&models.Vote{},
 	); err != nil {
 		return nil, err
 	}
