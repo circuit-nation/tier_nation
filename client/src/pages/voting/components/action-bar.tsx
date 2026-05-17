@@ -96,10 +96,7 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
     setIsSubmitting(true);
     setSubmitError('');
     try {
-      await createSubmission(
-        { listId: list.id, isAnonymous },
-        accessToken
-      );
+      await createSubmission({ listId: list.id, isAnonymous }, accessToken);
       await postVotes(
         {
           listId: list.id,

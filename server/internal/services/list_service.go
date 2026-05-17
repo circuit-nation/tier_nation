@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/circuit-nation/tier_nation/server/internal/models"
@@ -11,9 +12,10 @@ import (
 )
 
 var (
-	ErrListNotFound = errors.New("list not found")
-	ErrListArchived = errors.New("list is archived")
-	ErrListLocked   = errors.New("list is locked")
+	ErrListNotFound       = errors.New("list not found")
+	ErrListArchived       = errors.New("list is archived")
+	ErrListLocked         = errors.New("list is locked")
+	ErrListEntityNotFound = errors.New("entity is not linked to this list")
 )
 
 type ListService struct {
@@ -158,6 +160,205 @@ func (s *ListService) ArchiveList(id uuid.UUID) error {
 		return ErrListNotFound
 	}
 	return nil
+}
+
+// UpdateTierListInput holds optional fields for PATCH /admin/lists/:listId.
+type UpdateTierListInput struct {
+	Name        *string
+	Description *string
+	CoverImage  *string
+	TiersConfig *datatypes.JSON
+	IsLocked    *bool
+	IsVisible   *bool
+	StartTime   *time.Time
+	EndTime     *time.Time
+}
+
+func (s *ListService) UpdateTierList(id uuid.UUID, patch UpdateTierListInput) (*models.TierList, error) {
+	if _, err := s.GetByID(id); err != nil {
+		return nil, err
+	}
+
+	updates := map[string]interface{}{}
+	if patch.Name != nil {
+		updates["name"] = *patch.Name
+	}
+	if patch.Description != nil {
+		updates["description"] = *patch.Description
+	}
+	if patch.CoverImage != nil {
+		updates["cover_image"] = *patch.CoverImage
+	}
+	if patch.TiersConfig != nil {
+		if _, err := ParseTiersConfigJSON(*patch.TiersConfig); err != nil {
+			return nil, err
+		}
+		updates["tiers_config"] = *patch.TiersConfig
+	}
+	if patch.IsLocked != nil {
+		updates["is_locked"] = *patch.IsLocked
+	}
+	if patch.IsVisible != nil {
+		updates["is_visible"] = *patch.IsVisible
+	}
+	if patch.StartTime != nil {
+		updates["start_time"] = *patch.StartTime
+	}
+	if patch.EndTime != nil {
+		updates["end_time"] = *patch.EndTime
+	}
+
+	if len(updates) == 0 {
+		return s.GetByID(id)
+	}
+
+	res := s.db.Model(&models.TierList{}).Where("id = ?", id).Updates(updates)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	if res.RowsAffected == 0 {
+		return nil, ErrListNotFound
+	}
+	return s.GetByID(id)
+}
+
+// DeleteTierList permanently removes a list, its list–entity links, votes, and submissions.
+// Entities that are no longer referenced by any list are deleted.
+func (s *ListService) DeleteTierList(id uuid.UUID) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		var list models.TierList
+		if err := tx.First(&list, "id = ?", id).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrListNotFound
+			}
+			return err
+		}
+
+		var entityIDs []uuid.UUID
+		if err := tx.Model(&models.ListEntity{}).Where("list_id = ?", id).Pluck("entity_id", &entityIDs).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Where("list_id = ?", id).Delete(&models.Vote{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("list_id = ?", id).Delete(&models.Submission{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("list_id = ?", id).Delete(&models.ListEntity{}).Error; err != nil {
+			return err
+		}
+
+		for _, eid := range entityIDs {
+			var n int64
+			if err := tx.Model(&models.ListEntity{}).Where("entity_id = ?", eid).Count(&n).Error; err != nil {
+				return err
+			}
+			if n == 0 {
+				if err := tx.Delete(&models.Entity{}, "id = ?", eid).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		if err := tx.Delete(&models.TierList{}, "id = ?", id).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+// RemoveEntityFromList deletes list–entity association and votes for that pair on the list.
+func (s *ListService) RemoveEntityFromList(listID, entityID uuid.UUID) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.First(&models.TierList{}, "id = ?", listID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrListNotFound
+			}
+			return err
+		}
+
+		res := tx.Where("list_id = ? AND entity_id = ?", listID, entityID).Delete(&models.ListEntity{})
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected == 0 {
+			return ErrListEntityNotFound
+		}
+
+		if err := tx.Where("list_id = ? AND entity_id = ?", listID, entityID).Delete(&models.Vote{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+// ListEntityOrderItem is one row in a reorder request.
+type ListEntityOrderItem struct {
+	EntityID  uuid.UUID
+	SortOrder int
+}
+
+// ReorderListEntities replaces sort_order for every entity on the list.
+func (s *ListService) ReorderListEntities(listID uuid.UUID, order []ListEntityOrderItem) error {
+	if len(order) == 0 {
+		return errors.New("order must not be empty")
+	}
+
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.First(&models.TierList{}, "id = ?", listID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrListNotFound
+			}
+			return err
+		}
+
+		var links []models.ListEntity
+		if err := tx.Where("list_id = ?", listID).Find(&links).Error; err != nil {
+			return err
+		}
+		if len(links) == 0 {
+			return errors.New("list has no entities")
+		}
+
+		expected := make(map[uuid.UUID]struct{}, len(links))
+		for _, le := range links {
+			expected[le.EntityID] = struct{}{}
+		}
+
+		if len(order) != len(expected) {
+			return fmt.Errorf("order must include exactly %d entities", len(expected))
+		}
+
+		seenOrders := make(map[int]struct{}, len(order))
+		seenEntities := make(map[uuid.UUID]struct{}, len(order))
+		for _, item := range order {
+			if item.SortOrder < 0 {
+				return errors.New("sortOrder must be non-negative")
+			}
+			if _, ok := expected[item.EntityID]; !ok {
+				return fmt.Errorf("entity %s is not on this list", item.EntityID)
+			}
+			if _, dup := seenEntities[item.EntityID]; dup {
+				return errors.New("duplicate entityId in order")
+			}
+			seenEntities[item.EntityID] = struct{}{}
+			if _, dup := seenOrders[item.SortOrder]; dup {
+				return errors.New("duplicate sortOrder")
+			}
+			seenOrders[item.SortOrder] = struct{}{}
+		}
+
+		for _, item := range order {
+			res := tx.Model(&models.ListEntity{}).
+				Where("list_id = ? AND entity_id = ?", listID, item.EntityID).
+				Update("sort_order", item.SortOrder)
+			if res.Error != nil {
+				return res.Error
+			}
+		}
+		return nil
+	})
 }
 
 func (s *ListService) ValidateListOpenForVoting(list *models.TierList) error {

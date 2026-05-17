@@ -141,6 +141,9 @@ func tierListJSON(t *models.TierList) gin.H {
 		"createdAt":    t.CreatedAt,
 		"updatedAt":    t.UpdatedAt,
 	}
+	if t.ArchivedAt != nil {
+		h["archivedAt"] = t.ArchivedAt
+	}
 	return h
 }
 
@@ -148,11 +151,12 @@ func entitySummariesJSON(entities []models.Entity) []gin.H {
 	out := make([]gin.H, 0, len(entities))
 	for _, e := range entities {
 		item := gin.H{
-			"id":       e.ID.String(),
-			"name":     e.Name,
-			"team":     e.Team,
-			"tags":     []string(e.Tags),
-			"imageUrl": e.ImageURL,
+			"id":          e.ID.String(),
+			"name":        e.Name,
+			"description": e.Description,
+			"team":        e.Team,
+			"tags":        []string(e.Tags),
+			"imageUrl":    e.ImageURL,
 		}
 		out = append(out, item)
 	}

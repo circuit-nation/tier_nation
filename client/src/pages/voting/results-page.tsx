@@ -62,7 +62,10 @@ export function ResultsPage() {
             entityAverages,
             tierScores
           );
-          totalVotes = entityAverages.reduce((acc, row) => acc + row.voteCount, 0);
+          totalVotes = entityAverages.reduce(
+            (acc, row) => acc + row.voteCount,
+            0
+          );
         } catch {
           const listVotes = await getVotesByList(list.id);
           const community = buildCommunityBoard(listVotes, tierScores);

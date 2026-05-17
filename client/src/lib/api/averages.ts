@@ -1,7 +1,10 @@
 import { apiUrl, parseJson } from '@/lib/api/http';
 import type { ApiEntityAverageRow } from '@/lib/api/types';
 
-export async function fetchListAverageScore(listId: string, accessToken: string) {
+export async function fetchListAverageScore(
+  listId: string,
+  accessToken: string
+) {
   const res = await fetch(
     apiUrl(`/lists/${encodeURIComponent(listId)}/average-score`),
     {

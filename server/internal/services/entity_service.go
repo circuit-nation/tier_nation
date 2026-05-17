@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var ErrEntityNotFound = errors.New("entity not found")
+
 type EntityService struct {
 	db *gorm.DB
 }
@@ -93,4 +95,84 @@ func nextListEntitySortOrder(tx *gorm.DB, listID uuid.UUID) (int, error) {
 		return 0, err
 	}
 	return le.SortOrder + 1, nil
+}
+
+// UpdateEntityInput holds optional fields for PATCH /admin/entities/:id.
+type UpdateEntityInput struct {
+	Name        *string
+	Description *string
+	Team        *string
+	Tags        *[]string
+	ImageURL    *string
+}
+
+func (s *EntityService) GetByID(id uuid.UUID) (*models.Entity, error) {
+	var e models.Entity
+	if err := s.db.First(&e, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrEntityNotFound
+		}
+		return nil, err
+	}
+	return &e, nil
+}
+
+func (s *EntityService) UpdateEntity(id uuid.UUID, in UpdateEntityInput) (*models.Entity, error) {
+	if _, err := s.GetByID(id); err != nil {
+		return nil, err
+	}
+
+	updates := map[string]interface{}{}
+	if in.Name != nil {
+		updates["name"] = *in.Name
+	}
+	if in.Description != nil {
+		updates["description"] = *in.Description
+	}
+	if in.Team != nil {
+		updates["team"] = *in.Team
+	}
+	if in.Tags != nil {
+		tags := *in.Tags
+		if tags == nil {
+			tags = []string{}
+		}
+		updates["tags"] = pq.StringArray(tags)
+	}
+	if in.ImageURL != nil {
+		updates["image_url"] = *in.ImageURL
+	}
+
+	if len(updates) == 0 {
+		return s.GetByID(id)
+	}
+
+	res := s.db.Model(&models.Entity{}).Where("id = ?", id).Updates(updates)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	if res.RowsAffected == 0 {
+		return nil, ErrEntityNotFound
+	}
+	return s.GetByID(id)
+}
+
+// DeleteEntity removes votes and list links for this entity, then the entity row.
+func (s *EntityService) DeleteEntity(id uuid.UUID) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		var e models.Entity
+		if err := tx.First(&e, "id = ?", id).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrEntityNotFound
+			}
+			return err
+		}
+		if err := tx.Where("entity_id = ?", id).Delete(&models.Vote{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("entity_id = ?", id).Delete(&models.ListEntity{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&models.Entity{}, "id = ?", id).Error
+	})
 }

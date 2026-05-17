@@ -22,7 +22,9 @@ export function HomePage() {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setLoadError(err instanceof Error ? err.message : 'Failed to load lists');
+        setLoadError(
+          err instanceof Error ? err.message : 'Failed to load lists'
+        );
         setLists([]);
       });
     return () => {

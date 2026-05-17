@@ -110,8 +110,14 @@ func (s *Server) setupRoutes() {
 		{
 			admin.POST("/lists", s.adminHandler.CreateTierList)
 			admin.POST("/entities", s.adminHandler.CreateEntities)
-			admin.POST("/lists/:id/entities", s.adminHandler.AddEntitiesToList)
-			admin.PATCH("/lists/:id/archive", s.adminHandler.ArchiveList)
+			admin.POST("/lists/:listId/entities", s.adminHandler.AddEntitiesToList)
+			admin.PATCH("/lists/:listId/entities/order", s.adminHandler.ReorderListEntities)
+			admin.DELETE("/lists/:listId/entities/:entityId", s.adminHandler.RemoveEntityFromList)
+			admin.PATCH("/lists/:listId/archive", s.adminHandler.ArchiveList)
+			admin.PATCH("/lists/:listId", s.adminHandler.UpdateTierList)
+			admin.DELETE("/lists/:listId", s.adminHandler.DeleteTierList)
+			admin.PATCH("/entities/:id", s.adminHandler.UpdateEntity)
+			admin.DELETE("/entities/:id", s.adminHandler.DeleteEntity)
 		}
 	}
 }

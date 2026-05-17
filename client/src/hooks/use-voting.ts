@@ -56,7 +56,9 @@ export function useVoting(listId?: string) {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setLoadError(err instanceof Error ? err.message : 'Failed to load list');
+        setLoadError(
+          err instanceof Error ? err.message : 'Failed to load list'
+        );
         setRemoteList(null);
         setRemoteEntities(null);
       })
