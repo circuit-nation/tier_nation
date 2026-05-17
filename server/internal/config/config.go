@@ -8,14 +8,17 @@ import (
 )
 
 type Config struct {
-	Port               string
-	Env                string
-	DatabaseURL        string
-	GoogleClientID     string
-	GoogleClientSecret string
-	GoogleRedirectURL  string
-	JWTSecret          string
-	ClientURL          string
+	Port                   string
+	Env                    string
+	DatabaseURL            string
+	GoogleClientID         string
+	GoogleClientSecret     string
+	GoogleRedirectURL      string
+	JWTSecret              string
+	ClientURL              string
+	AdminClientURL         string
+	AdminBasicAuthUsername string
+	AdminBasicAuthPassword string
 }
 
 func Load() *Config {
@@ -24,14 +27,17 @@ func Load() *Config {
 	}
 
 	return &Config{
-		Port:               getEnv("PORT", "8080"),
-		Env:                getEnv("ENV", "development"),
-		DatabaseURL:        getEnv("DATABASE_URL", ""),
-		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
-		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
-		GoogleRedirectURL:  getEnv("GOOGLE_REDIRECT_URL", ""),
-		JWTSecret:          getEnv("JWT_SECRET", ""),
-		ClientURL:          getEnv("CLIENT_URL", "http://localhost:3000"),
+		Port:                   getEnv("PORT", "8080"),
+		Env:                    getEnv("ENV", "development"),
+		DatabaseURL:            getEnv("DATABASE_URL", ""),
+		GoogleClientID:         getEnv("GOOGLE_CLIENT_ID", ""),
+		GoogleClientSecret:     getEnv("GOOGLE_CLIENT_SECRET", ""),
+		GoogleRedirectURL:      getEnv("GOOGLE_REDIRECT_URL", ""),
+		JWTSecret:              getEnv("JWT_SECRET", ""),
+		ClientURL:              getEnv("CLIENT_URL", "http://localhost:3000"),
+		AdminClientURL:         getEnv("ADMIN_CLIENT_URL", ""),
+		AdminBasicAuthUsername: getEnv("ADMIN_BASIC_AUTH_USERNAME", ""),
+		AdminBasicAuthPassword: getEnv("ADMIN_BASIC_AUTH_PASSWORD", ""),
 	}
 }
 
@@ -41,4 +47,13 @@ func getEnv(key string, fallback string) string {
 	}
 
 	return fallback
+}
+
+// CorsAllowedOrigins returns origins allowed by CORS (main app + optional admin dashboard).
+func (c *Config) CorsAllowedOrigins() []string {
+	origins := []string{c.ClientURL}
+	if c.AdminClientURL != "" {
+		origins = append(origins, c.AdminClientURL)
+	}
+	return origins
 }

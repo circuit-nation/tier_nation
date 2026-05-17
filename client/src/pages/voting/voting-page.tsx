@@ -7,6 +7,7 @@ import { TierBoard } from '@/pages/voting/components/tier-board';
 
 import { getRelativeTime } from '@/lib/utils';
 import LiveIndicator from '@/components/ui/live-dot';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { Vote } from '@/types';
 import ActionBar from './components/action-bar';
 import { mapVotesToBoard } from './results-utils';
@@ -15,8 +16,16 @@ export function VotingPage() {
   const navigate = useNavigate();
   const { listId } = useParams();
 
-  const { list, tiers, board, pool, entitiesById, moveEntity } =
-    useVoting(listId);
+  const {
+    list,
+    tiers,
+    board,
+    pool,
+    entitiesById,
+    moveEntity,
+    loadError,
+    isLoadingList,
+  } = useVoting(listId);
 
   const { activeEntityId, overDestination, draggableProps, dropzoneProps } =
     useDragDrop(moveEntity);
@@ -33,6 +42,24 @@ export function VotingPage() {
       state: { userBoard },
     });
   };
+
+  if (listId && isLoadingList) {
+    return (
+      <div className="space-y-4 py-10 px-5 max-w-4xl mx-auto">
+        <Skeleton className="h-10 w-2/3" />
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-64 w-full rounded-xl" />
+      </div>
+    );
+  }
+
+  if (listId && loadError) {
+    return (
+      <div className="py-10 px-5">
+        <p className="text-center text-sm text-destructive">{loadError}</p>
+      </div>
+    );
+  }
 
   return (
     // pb-28/pb-40 reserves space so the fixed pool doesn't overlap content

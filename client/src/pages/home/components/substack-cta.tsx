@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { IconArrowRight } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import substack from '@/assets/images/substack.svg';
 
 export function SubstackCTA() {
   return (

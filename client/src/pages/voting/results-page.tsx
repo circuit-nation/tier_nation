@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 
+import { fetchEntityAverages } from '@/lib/api/averages';
+import { useAuth } from '@/hooks/use-auth';
 import { useVoting } from '@/hooks/use-voting';
 import { getVotesByList } from '@/lib/mock/votes';
 import { VoteAverageSummary } from '@/pages/voting/components/vote-average-summary';
 import { getRelativeTime } from '@/lib/utils';
 import LiveIndicator from '@/components/ui/live-dot';
-import type { TierBoardState, Vote } from '@/types';
+import type { TierBoardState } from '@/types';
 import {
   buildCommunityBoard,
+  buildCommunityBoardFromEntityAverages,
   buildTierScores,
-  mapVotesToBoard,
+  createEmptyBoard,
 } from '@/pages/voting/results-utils';
 
 type ResultsLocationState = {
@@ -23,14 +26,13 @@ type ResultsState = {
   totalVotes: number;
 };
 
-const mockUserId = 'mock-user';
-
 export function ResultsPage() {
   const { id } = useParams();
   const location = useLocation();
   const routeState = (location.state as ResultsLocationState | null) ?? null;
   const [result, setResult] = useState<ResultsState | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const { accessToken } = useAuth();
   const { list, tiers, entitiesById } = useVoting(id);
 
   const tierScores = useMemo(() => buildTierScores(list.tiers), [list.tiers]);
@@ -43,30 +45,44 @@ export function ResultsPage() {
       : false;
 
   useEffect(() => {
-    const resolveLatestUserVotes = (votes: Vote[]) => {
-      const userVotes = votes.filter((vote) => vote.userId === mockUserId);
-      if (userVotes.length === 0) return [];
-
-      const latestTimestamp = userVotes.reduce(
-        (latest, vote) => (vote.createdAt > latest ? vote.createdAt : latest),
-        userVotes[0].createdAt
-      );
-
-      return userVotes.filter((vote) => vote.createdAt === latestTimestamp);
-    };
-
     const loadResults = async () => {
       setErrorMessage('');
-      const listVotes = await getVotesByList(list.id);
-      const fallbackUserVotes = resolveLatestUserVotes(listVotes);
-      const userBoard =
-        routeState?.userBoard ?? mapVotesToBoard(fallbackUserVotes);
-      const community = buildCommunityBoard(listVotes, tierScores);
+      const userBoard = routeState?.userBoard ?? createEmptyBoard();
+
+      let communityBoard = createEmptyBoard();
+      let totalVotes = 0;
+
+      if (accessToken) {
+        try {
+          const { entityAverages } = await fetchEntityAverages(
+            list.id,
+            accessToken
+          );
+          communityBoard = buildCommunityBoardFromEntityAverages(
+            entityAverages,
+            tierScores
+          );
+          totalVotes = entityAverages.reduce(
+            (acc, row) => acc + row.voteCount,
+            0
+          );
+        } catch {
+          const listVotes = await getVotesByList(list.id);
+          const community = buildCommunityBoard(listVotes, tierScores);
+          communityBoard = community.board;
+          totalVotes = community.totals.totalVotes;
+        }
+      } else {
+        const listVotes = await getVotesByList(list.id);
+        const community = buildCommunityBoard(listVotes, tierScores);
+        communityBoard = community.board;
+        totalVotes = community.totals.totalVotes;
+      }
 
       setResult({
         userBoard,
-        communityBoard: community.board,
-        totalVotes: community.totals.totalVotes,
+        communityBoard,
+        totalVotes,
       });
     };
 
@@ -75,7 +91,7 @@ export function ResultsPage() {
         error instanceof Error ? error.message : 'Failed to load results.'
       );
     });
-  }, [list.id, routeState?.userBoard, tierScores]);
+  }, [list.id, routeState?.userBoard, tierScores, accessToken]);
 
   return (
     <div className="space-y-4 py-10 pb-28 sm:pb-40 px-5">

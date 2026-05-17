@@ -4,8 +4,9 @@ import {
   getTimeRemainingParts,
   subscribeToCountdownClock,
 } from '@/lib/countdown';
-import { postVotes } from '@/lib/mock/votes';
-import { validateVotePayload } from '@/lib/validation/voteSchema';
+import { createSubmission } from '@/lib/api/submissions';
+import { postVotes } from '@/lib/api/votes';
+import { useAuth } from '@/hooks/use-auth';
 import type { Vote } from '@/types';
 import { Button } from '@/components/ui/button';
 import { IconRestore, IconShare } from '@tabler/icons-react';
@@ -23,6 +24,7 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
   const [submitMessage, setSubmitMessage] = useState<string>('');
   const [submitError, setSubmitError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { accessToken, user, isAuthenticated, isAnonymous } = useAuth();
   const nowMs = useSyncExternalStore(
     subscribeToCountdownClock,
     getCountdownNowSnapshot
@@ -36,6 +38,7 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
     canSubmit,
     resetBoard,
     buildVotePayload,
+    buildApiVoteLines,
   } = useVoting(listId);
   const timeRemaining = getTimeRemainingParts(list.endTime, nowMs);
   const isLessThanOneHour =
@@ -75,18 +78,34 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
       return;
     }
 
-    const payload = buildVotePayload('mock-user');
+    if (!isAuthenticated || !accessToken || !user) {
+      setSubmitError('Sign in to submit your votes.');
+      return;
+    }
+
+    let lines: ReturnType<typeof buildApiVoteLines>;
     try {
-      validateVotePayload(payload);
+      lines = buildApiVoteLines();
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : 'Validation error');
       return;
     }
 
+    const payload = buildVotePayload(user.id);
+
     setIsSubmitting(true);
     setSubmitError('');
     try {
-      await postVotes(payload);
+      await createSubmission({ listId: list.id, isAnonymous }, accessToken);
+      await postVotes(
+        {
+          listId: list.id,
+          isAnonymous,
+          votes: lines,
+        },
+        accessToken
+      );
+
       const submittedAt = new Date().toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
