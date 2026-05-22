@@ -223,7 +223,7 @@ func (s *ListService) UpdateTierList(id uuid.UUID, patch UpdateTierListInput) (*
 }
 
 // DeleteTierList permanently removes a list, its list–entity links, votes, and submissions.
-// Entities that are no longer referenced by any list are deleted.
+// Entity rows are not deleted; they may remain unattached or linked to other lists.
 func (s *ListService) DeleteTierList(id uuid.UUID) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		var list models.TierList
@@ -231,11 +231,6 @@ func (s *ListService) DeleteTierList(id uuid.UUID) error {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return ErrListNotFound
 			}
-			return err
-		}
-
-		var entityIDs []uuid.UUID
-		if err := tx.Model(&models.ListEntity{}).Where("list_id = ?", id).Pluck("entity_id", &entityIDs).Error; err != nil {
 			return err
 		}
 
@@ -247,18 +242,6 @@ func (s *ListService) DeleteTierList(id uuid.UUID) error {
 		}
 		if err := tx.Where("list_id = ?", id).Delete(&models.ListEntity{}).Error; err != nil {
 			return err
-		}
-
-		for _, eid := range entityIDs {
-			var n int64
-			if err := tx.Model(&models.ListEntity{}).Where("entity_id = ?", eid).Count(&n).Error; err != nil {
-				return err
-			}
-			if n == 0 {
-				if err := tx.Delete(&models.Entity{}, "id = ?", eid).Error; err != nil {
-					return err
-				}
-			}
 		}
 
 		if err := tx.Delete(&models.TierList{}, "id = ?", id).Error; err != nil {

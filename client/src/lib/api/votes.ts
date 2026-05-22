@@ -1,15 +1,11 @@
-import { apiUrl, parseJson } from '@/lib/api/http';
-import type { ApiPostVotesBody } from '@/lib/api/types';
+import { apiFetch } from '@/lib/api/http';
+import type { ApiPostVotesBody, ApiPostVotesResponse } from '@/lib/api/types';
 
 export async function postVotes(body: ApiPostVotesBody, accessToken: string) {
-  const res = await fetch(apiUrl('/votes'), {
+  return apiFetch<ApiPostVotesResponse>('/votes', {
     method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
+    accessToken,
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  return parseJson<{ message: string }>(res);
 }

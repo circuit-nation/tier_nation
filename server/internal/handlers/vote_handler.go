@@ -54,8 +54,8 @@ func (h *VoteHandler) PostVotes(ctx *gin.Context) {
 		})
 	}
 
-	err = h.votes.SubmitVotes(userID, listID, body.IsAnonymous, lines)
-	if errors.Is(err, services.ErrSubmissionRequired) {
+	result, err := h.votes.SubmitVotes(userID, listID, body.IsAnonymous, lines)
+	if errors.Is(err, services.ErrInsufficientVotes) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -68,5 +68,52 @@ func (h *VoteHandler) PostVotes(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "votes submitted"})
+	ctx.JSON(http.StatusOK, gin.H{
+		"submissionId":     result.SubmissionID.String(),
+		"voteCount":        result.VoteCount,
+		"updatedAt":        result.UpdatedAt,
+		"userAverageScore": result.UserAverageScore,
+	})
+}
+
+func (h *VoteHandler) GetVotesMe(ctx *gin.Context) {
+	userID := ctx.MustGet("user_id").(uuid.UUID)
+
+	listID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid list id"})
+		return
+	}
+
+	result, err := h.votes.GetUserVotes(userID, listID)
+	if errors.Is(err, services.ErrNoVotesFound) {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "no votes found for this list"})
+		return
+	}
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	votes := make([]gin.H, 0, len(result.Votes))
+	for _, v := range result.Votes {
+		item := gin.H{
+			"entityId":  v.EntityID.String(),
+			"tierValue": v.TierValue,
+		}
+		if v.PlacementOrder != nil {
+			item["placementOrder"] = *v.PlacementOrder
+		}
+		votes = append(votes, item)
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"listId":           result.ListID.String(),
+		"submissionId":     result.SubmissionID.String(),
+		"isAnonymous":      result.IsAnonymous,
+		"submittedAt":      result.SubmittedAt,
+		"voteCount":        result.VoteCount,
+		"votes":            votes,
+		"userAverageScore": result.UserAverageScore,
+	})
 }

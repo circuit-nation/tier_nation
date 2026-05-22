@@ -1,18 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useMemo } from 'react';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
-import { fetchEntityAverages } from '@/lib/api/averages';
 import { useAuth } from '@/hooks/use-auth';
+import { useListDetail } from '@/hooks/use-list-detail';
+import { useListStats } from '@/hooks/use-list-stats';
+import { useResults } from '@/hooks/use-results';
+import { useVotesMe } from '@/hooks/use-votes-me';
 import { useVoting } from '@/hooks/use-voting';
-import { getVotesByList } from '@/lib/mock/votes';
 import { VoteAverageSummary } from '@/pages/voting/components/vote-average-summary';
 import { getRelativeTime } from '@/lib/utils';
 import LiveIndicator from '@/components/ui/live-dot';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import type { TierBoardState } from '@/types';
 import {
-  buildCommunityBoard,
   buildCommunityBoardFromEntityAverages,
   buildTierScores,
+  buildUserBoardFromApiVotes,
   createEmptyBoard,
 } from '@/pages/voting/results-utils';
 
@@ -24,74 +28,120 @@ type ResultsState = {
   userBoard: TierBoardState;
   communityBoard: TierBoardState;
   totalVotes: number;
+  communityHidden: boolean;
+  communityMessage: string | null;
 };
 
 export function ResultsPage() {
   const { id } = useParams();
   const location = useLocation();
   const routeState = (location.state as ResultsLocationState | null) ?? null;
-  const [result, setResult] = useState<ResultsState | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string>('');
-  const { accessToken } = useAuth();
-  const { list, tiers, entitiesById } = useVoting(id);
+  const { accessToken, isAuthenticated } = useAuth();
+  const { list, tiers, entitiesById, isLoadingList, loadError } = useVoting(id);
+  const { userStatus } = useListDetail(id);
+  const listId = list?.id ?? id ?? '';
+  const { resultsState, error: fetchError, isLoading: isLoadingCommunity } =
+    useResults(listId, accessToken);
+  const { votesMe, isLoading: isLoadingVotesMe } = useVotesMe(
+    listId,
+    accessToken
+  );
+  const { stats } = useListStats(listId);
 
-  const tierScores = useMemo(() => buildTierScores(list.tiers), [list.tiers]);
+  const tierScores = useMemo(
+    () => (list ? buildTierScores(list.tiers) : buildTierScores([])),
+    [list]
+  );
 
-  const startTime = list.startTime;
-  const endTime = list.endTime;
-  const isLive =
-    startTime && endTime
-      ? new Date() > new Date(startTime) && new Date() < new Date(endTime)
-      : false;
+  const isLive = list
+    ? (list.isLive ??
+      (list.startTime && list.endTime
+        ? new Date() > new Date(list.startTime) &&
+          new Date() < new Date(list.endTime)
+        : false))
+    : false;
 
-  useEffect(() => {
-    const loadResults = async () => {
-      setErrorMessage('');
-      const userBoard = routeState?.userBoard ?? createEmptyBoard();
+  const canViewCommunity =
+    userStatus?.canViewCommunityResults ??
+    userStatus?.hasSubmitted ??
+    false;
 
-      let communityBoard = createEmptyBoard();
-      let totalVotes = 0;
+  const tiersConfig = list?.tiersConfig;
 
-      if (accessToken) {
-        try {
-          const { entityAverages } = await fetchEntityAverages(
-            list.id,
-            accessToken
-          );
-          communityBoard = buildCommunityBoardFromEntityAverages(
-            entityAverages,
-            tierScores
-          );
-          totalVotes = entityAverages.reduce(
-            (acc, row) => acc + row.voteCount,
-            0
-          );
-        } catch {
-          const listVotes = await getVotesByList(list.id);
-          const community = buildCommunityBoard(listVotes, tierScores);
-          communityBoard = community.board;
-          totalVotes = community.totals.totalVotes;
-        }
-      } else {
-        const listVotes = await getVotesByList(list.id);
-        const community = buildCommunityBoard(listVotes, tierScores);
-        communityBoard = community.board;
-        totalVotes = community.totals.totalVotes;
-      }
+  const userBoard = useMemo(() => {
+    if (votesMe && tiersConfig) {
+      return buildUserBoardFromApiVotes(votesMe.votes, tiersConfig);
+    }
+    return routeState?.userBoard ?? createEmptyBoard();
+  }, [routeState?.userBoard, votesMe, tiersConfig]);
 
-      setResult({
-        userBoard,
-        communityBoard,
-        totalVotes,
-      });
-    };
+  const community = useMemo(() => {
+    let communityBoard = createEmptyBoard();
+    let totalVotes = stats?.uniqueVoters ?? 0;
+    let communityHidden = !canViewCommunity;
+    let communityMessage: string | null = null;
 
-    loadResults().catch((error: unknown) => {
-      setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to load results.'
+    if (!isAuthenticated) {
+      communityMessage = 'Sign in to see community averages.';
+    } else if (!canViewCommunity) {
+      communityMessage = 'Submit your votes to unlock community results.';
+    } else if (resultsState?.status === 'ready') {
+      communityBoard = buildCommunityBoardFromEntityAverages(
+        resultsState.data.entityAverages,
+        tierScores
       );
-    });
-  }, [list.id, routeState?.userBoard, tierScores, accessToken]);
+      totalVotes = resultsState.data.uniqueVoters;
+      communityHidden = false;
+      communityMessage = null;
+    } else if (resultsState?.status === 'submission_required') {
+      communityMessage = 'Submit your votes to unlock community results.';
+    } else if (resultsState?.status === 'auth_required') {
+      communityMessage = 'Sign in to see community averages.';
+    } else if (resultsState?.status === 'error') {
+      communityMessage = resultsState.message;
+    }
+
+    return {
+      communityBoard,
+      totalVotes,
+      communityHidden,
+      communityMessage,
+    };
+  }, [
+    canViewCommunity,
+    isAuthenticated,
+    resultsState,
+    tierScores,
+    stats?.uniqueVoters,
+  ]);
+
+  const result: ResultsState | null = list
+    ? { userBoard, ...community }
+    : null;
+
+  const isLoading =
+    isLoadingList ||
+    isLoadingCommunity ||
+    (isAuthenticated && isLoadingVotesMe);
+  const errorMessage = loadError ?? fetchError ?? '';
+
+  if (!list && !isLoadingList) {
+    return (
+      <div className="py-10 px-5">
+        <p className="text-center text-sm text-destructive">
+          {errorMessage || 'List not found.'}
+        </p>
+      </div>
+    );
+  }
+
+  if (!list) {
+    return (
+      <div className="py-10 px-5">
+        <Skeleton className="h-64 w-full max-w-4xl rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 py-10 pb-28 sm:pb-40 px-5">
@@ -121,13 +171,30 @@ export function ResultsPage() {
           <p className="text-sm font-medium text-red-500">{errorMessage}</p>
         ) : null}
 
-        {result ? (
+        {isLoading ? (
+          <Skeleton className="h-64 w-full max-w-4xl rounded-xl" />
+        ) : null}
+
+        {result && list ? (
           <VoteAverageSummary
             tiers={tiers}
             entitiesById={entitiesById}
             userBoard={result.userBoard}
             communityBoard={result.communityBoard}
             totalVotes={result.totalVotes}
+            communityHidden={result.communityHidden}
+            communityMessage={result.communityMessage}
+            communityAction={
+              !isAuthenticated ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/login">Sign in</Link>
+                </Button>
+              ) : !canViewCommunity ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link to={`/voting/${list.id}`}>Submit votes</Link>
+                </Button>
+              ) : null
+            }
           />
         ) : null}
       </section>

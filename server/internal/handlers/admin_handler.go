@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/circuit-nation/tier_nation/server/internal/models"
@@ -16,10 +17,11 @@ import (
 type AdminHandler struct {
 	lists    *services.ListService
 	entities *services.EntityService
+	images   *services.ImageURLService
 }
 
-func NewAdminHandler(lists *services.ListService, entities *services.EntityService) *AdminHandler {
-	return &AdminHandler{lists: lists, entities: entities}
+func NewAdminHandler(lists *services.ListService, entities *services.EntityService, images *services.ImageURLService) *AdminHandler {
+	return &AdminHandler{lists: lists, entities: entities, images: images}
 }
 
 func (h *AdminHandler) CreateTierList(ctx *gin.Context) {
@@ -53,7 +55,8 @@ func (h *AdminHandler) CreateTierList(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, tierListJSON(list))
+	entityCount, _ := h.lists.EntityCountForList(list.ID)
+	ctx.JSON(http.StatusCreated, tierListJSON(list, h.images, services.DeriveListMeta(list), entityCount))
 }
 
 func (h *AdminHandler) CreateEntities(ctx *gin.Context) {
@@ -90,6 +93,35 @@ func (h *AdminHandler) CreateEntities(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "entities created"})
 }
 
+func (h *AdminHandler) ListEntities(ctx *gin.Context) {
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "100"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 500 {
+		limit = 100
+	}
+	search := ctx.Query("search")
+	offset := (page - 1) * limit
+
+	result, err := h.entities.ListEntities(offset, limit, search)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	items := make([]gin.H, 0, len(result.Entities))
+	for _, e := range result.Entities {
+		items = append(items, entityCatalogJSON(&e, h.images))
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"entities": items,
+		"total":    result.Total,
+	})
+}
+
 func (h *AdminHandler) AddEntitiesToList(ctx *gin.Context) {
 	listID, err := uuid.Parse(ctx.Param("listId"))
 	if err != nil {
@@ -107,20 +139,69 @@ func (h *AdminHandler) AddEntitiesToList(ctx *gin.Context) {
 
 	var body struct {
 		Entities []struct {
-			Name        string   `json:"name" binding:"required"`
+			Name        string   `json:"name"`
 			Team        string   `json:"team"`
 			Tags        []string `json:"tags"`
 			ImageURL    string   `json:"imageUrl"`
 			Description string   `json:"description"`
-		} `json:"entities" binding:"required"`
+		} `json:"entities"`
+		EntityIDs []string `json:"entityIds"`
 	}
 	if err := ctx.ShouldBindJSON(&body); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	hasEntities := len(body.Entities) > 0
+	hasIDs := len(body.EntityIDs) > 0
+	if !hasEntities && !hasIDs {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "entities or entityIds is required"})
+		return
+	}
+	if hasEntities && hasIDs {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "provide entities or entityIds, not both"})
+		return
+	}
+
+	if hasIDs {
+		ids := make([]uuid.UUID, 0, len(body.EntityIDs))
+		for _, raw := range body.EntityIDs {
+			eid, err := uuid.Parse(raw)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid entity id"})
+				return
+			}
+			ids = append(ids, eid)
+		}
+
+		skipped, err := h.entities.AttachExistingToList(listID, ids)
+		if errors.Is(err, services.ErrEntityNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "entity not found"})
+			return
+		}
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		resp := gin.H{"message": "entities linked to list"}
+		if len(skipped) > 0 {
+			skippedStr := make([]string, len(skipped))
+			for i, id := range skipped {
+				skippedStr[i] = id.String()
+			}
+			resp["skippedEntityIds"] = skippedStr
+		}
+		ctx.JSON(http.StatusOK, resp)
+		return
+	}
+
 	inputs := make([]services.EntityInput, 0, len(body.Entities))
 	for _, e := range body.Entities {
+		if e.Name == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "entity name is required"})
+			return
+		}
 		inputs = append(inputs, services.EntityInput{
 			Name:        e.Name,
 			Description: e.Description,
@@ -202,7 +283,8 @@ func (h *AdminHandler) UpdateTierList(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, tierListJSON(list))
+	entityCount, _ := h.lists.EntityCountForList(list.ID)
+	ctx.JSON(http.StatusOK, tierListJSON(list, h.images, services.DeriveListMeta(list), entityCount))
 }
 
 func (h *AdminHandler) DeleteTierList(ctx *gin.Context) {
@@ -258,7 +340,7 @@ func (h *AdminHandler) UpdateEntity(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, entityAdminJSON(ent))
+	ctx.JSON(http.StatusOK, entityAdminJSON(ent, h.images))
 }
 
 func (h *AdminHandler) DeleteEntity(ctx *gin.Context) {
@@ -344,14 +426,25 @@ func (h *AdminHandler) ReorderListEntities(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "entity order updated"})
 }
 
-func entityAdminJSON(e *models.Entity) gin.H {
+func entityCatalogJSON(e *models.Entity, images *services.ImageURLService) gin.H {
 	return gin.H{
 		"id":          e.ID.String(),
 		"name":        e.Name,
 		"description": e.Description,
 		"team":        e.Team,
 		"tags":        []string(e.Tags),
-		"imageUrl":    e.ImageURL,
+		"imageUrl":    images.Resolve(e.ImageURL),
+	}
+}
+
+func entityAdminJSON(e *models.Entity, images *services.ImageURLService) gin.H {
+	return gin.H{
+		"id":          e.ID.String(),
+		"name":        e.Name,
+		"description": e.Description,
+		"team":        e.Team,
+		"tags":        []string(e.Tags),
+		"imageUrl":    images.Resolve(e.ImageURL),
 		"createdAt":   e.CreatedAt,
 		"updatedAt":   e.UpdatedAt,
 	}

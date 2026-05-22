@@ -1,42 +1,68 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 
-	"github.com/circuit-nation/tier_nation/server/internal/models"
+	"github.com/circuit-nation/tier_nation/server/internal/middleware"
 	"github.com/circuit-nation/tier_nation/server/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type ListHandler struct {
-	lists *services.ListService
-	agg   *services.AggregationService
+	lists      *services.ListService
+	agg        *services.AggregationService
+	images     *services.ImageURLService
+	userStatus *services.UserListStatusService
 }
 
-func NewListHandler(lists *services.ListService, agg *services.AggregationService) *ListHandler {
-	return &ListHandler{lists: lists, agg: agg}
+func NewListHandler(
+	lists *services.ListService,
+	agg *services.AggregationService,
+	images *services.ImageURLService,
+	userStatus *services.UserListStatusService,
+) *ListHandler {
+	return &ListHandler{lists: lists, agg: agg, images: images, userStatus: userStatus}
 }
 
 func (h *ListHandler) GetLists(ctx *gin.Context) {
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
 
-	lists, _, err := h.lists.ListPublic(page, limit)
+	lists, total, err := h.lists.ListPublic(page, limit)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	userID, authenticated := middleware.OptionalUserID(ctx)
+
 	out := make([]gin.H, 0, len(lists))
 	for i := range lists {
-		out = append(out, tierListJSON(&lists[i]))
+		entityCount, _ := h.lists.EntityCountForList(lists[i].ID)
+		meta := services.DeriveListMeta(&lists[i])
+		item := tierListJSON(&lists[i], h.images, meta, entityCount)
+		if authenticated {
+			status, err := h.userStatus.GetStatus(userID, lists[i].ID, true)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			item["userStatus"] = userStatusJSON(status, true)
+		}
+		out = append(out, item)
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"lists": out})
+	hasMore := int64(page*limit) < total
+	ctx.JSON(http.StatusOK, gin.H{
+		"lists":   out,
+		"page":    page,
+		"limit":   limit,
+		"total":   total,
+		"hasMore": hasMore,
+	})
 }
 
 func (h *ListHandler) GetList(ctx *gin.Context) {
@@ -56,15 +82,63 @@ func (h *ListHandler) GetList(ctx *gin.Context) {
 		return
 	}
 
-	entities, err := h.lists.EntitiesForList(id)
+	entityRows, err := h.lists.ListEntitiesDetailed(id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	payload := tierListJSON(list)
-	payload["entities"] = entitySummariesJSON(entities)
+	entityCount := int64(len(entityRows))
+	meta := services.DeriveListMeta(list)
+	payload := tierListJSON(list, h.images, meta, entityCount)
+	payload["entities"] = entitySummariesJSON(entityRows, h.images)
+
+	if userID, authenticated := middleware.OptionalUserID(ctx); authenticated {
+		status, err := h.userStatus.GetStatus(userID, id, true)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		payload["userStatus"] = userStatusJSON(status, false)
+	}
+
 	ctx.JSON(http.StatusOK, payload)
+}
+
+func (h *ListHandler) GetListStats(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid list id"})
+		return
+	}
+
+	if _, err := h.lists.GetByIDPublic(id); errors.Is(err, services.ErrListNotFound) {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "list not found"})
+		return
+	} else if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	entityCount, err := h.lists.EntityCountForList(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	stats, err := h.agg.ListStats(id, entityCount)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"listId":           stats.ListID.String(),
+		"entityCount":      stats.EntityCount,
+		"uniqueVoters":     stats.UniqueVoters,
+		"totalSubmissions": stats.TotalSubmissions,
+		"totalVoteLines":   stats.TotalVoteLines,
+	})
 }
 
 func (h *ListHandler) GetAverageScore(ctx *gin.Context) {
@@ -88,10 +162,31 @@ func (h *ListHandler) GetAverageScore(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"listId":         id.String(),
-		"averageScore":   avg,
-	})
+	participantCount, err := h.agg.UniqueVoters(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp := gin.H{
+		"listId":           id.String(),
+		"averageScore":     avg,
+		"participantCount": participantCount,
+	}
+
+	userID := ctx.MustGet("user_id").(uuid.UUID)
+	status, err := h.userStatus.GetStatus(userID, id, true)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if status.HasSubmitted && status.UserAverageScore != nil {
+		resp["userAverageScore"] = *status.UserAverageScore
+	} else {
+		resp["userAverageScore"] = nil
+	}
+
+	ctx.JSON(http.StatusOK, resp)
 }
 
 func (h *ListHandler) GetEntityAverages(ctx *gin.Context) {
@@ -101,7 +196,8 @@ func (h *ListHandler) GetEntityAverages(ctx *gin.Context) {
 		return
 	}
 
-	if _, err := h.lists.GetByID(id); errors.Is(err, services.ErrListNotFound) {
+	list, err := h.lists.GetByID(id)
+	if errors.Is(err, services.ErrListNotFound) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "list not found"})
 		return
 	} else if err != nil {
@@ -109,56 +205,40 @@ func (h *ListHandler) GetEntityAverages(ctx *gin.Context) {
 		return
 	}
 
-	rows, err := h.agg.EntityAverages(id)
+	userID := ctx.MustGet("user_id").(uuid.UUID)
+	status, err := h.userStatus.GetStatus(userID, id, true)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if !status.HasSubmitted {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"error": "submit your votes first",
+			"code":  "SUBMISSION_REQUIRED",
+		})
+		return
+	}
+
+	cfg, err := services.ParseTiersConfigJSON(list.TiersConfig)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"entityAverages": rows})
-}
+	rows, err := h.agg.EntityAverages(id, cfg, h.images.Resolve)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-func tierListJSON(t *models.TierList) gin.H {
-	var tiersCfg any
-	if len(t.TiersConfig) > 0 {
-		_ = json.Unmarshal(t.TiersConfig, &tiersCfg)
+	uniqueVoters, err := h.agg.UniqueVoters(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
-	var createdBy any
-	if t.CreatedBy != nil {
-		createdBy = t.CreatedBy.String()
-	}
-	h := gin.H{
-		"id":           t.ID.String(),
-		"name":         t.Name,
-		"description":  t.Description,
-		"coverImage":   t.CoverImage,
-		"tiersConfig":  tiersCfg,
-		"isLocked":     t.IsLocked,
-		"isVisible":    t.IsVisible,
-		"startTime":    t.StartTime,
-		"endTime":      t.EndTime,
-		"createdBy":    createdBy,
-		"createdAt":    t.CreatedAt,
-		"updatedAt":    t.UpdatedAt,
-	}
-	if t.ArchivedAt != nil {
-		h["archivedAt"] = t.ArchivedAt
-	}
-	return h
-}
 
-func entitySummariesJSON(entities []models.Entity) []gin.H {
-	out := make([]gin.H, 0, len(entities))
-	for _, e := range entities {
-		item := gin.H{
-			"id":          e.ID.String(),
-			"name":        e.Name,
-			"description": e.Description,
-			"team":        e.Team,
-			"tags":        []string(e.Tags),
-			"imageUrl":    e.ImageURL,
-		}
-		out = append(out, item)
-	}
-	return out
+	ctx.JSON(http.StatusOK, gin.H{
+		"entityAverages": entityAverageRowsJSON(rows),
+		"uniqueVoters":   uniqueVoters,
+	})
 }

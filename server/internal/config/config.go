@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -19,6 +20,11 @@ type Config struct {
 	AdminClientURL         string
 	AdminBasicAuthUsername string
 	AdminBasicAuthPassword string
+	AWSAccessKeyID         string
+	AWSSecretAccessKey     string
+	AWSRegion              string
+	AWSS3Bucket            string
+	AWSS3PresignExpirySec  int
 }
 
 func Load() *Config {
@@ -38,6 +44,11 @@ func Load() *Config {
 		AdminClientURL:         getEnv("ADMIN_CLIENT_URL", ""),
 		AdminBasicAuthUsername: getEnv("ADMIN_BASIC_AUTH_USERNAME", ""),
 		AdminBasicAuthPassword: getEnv("ADMIN_BASIC_AUTH_PASSWORD", ""),
+		AWSAccessKeyID:         getEnv("AWS_ACCESS_KEY_ID", ""),
+		AWSSecretAccessKey:     getEnv("AWS_SECRET_ACCESS_KEY", ""),
+		AWSRegion:              getEnv("AWS_REGION", "us-east-1"),
+		AWSS3Bucket:            getEnv("AWS_S3_BUCKET", ""),
+		AWSS3PresignExpirySec:  getEnvInt("AWS_S3_PRESIGN_EXPIRY_SEC", 3600),
 	}
 }
 
@@ -47,6 +58,19 @@ func getEnv(key string, fallback string) string {
 	}
 
 	return fallback
+}
+
+func getEnvInt(key string, fallback int) int {
+	val := os.Getenv(key)
+	if val == "" {
+		return fallback
+	}
+	n, err := strconv.Atoi(val)
+	if err != nil {
+		log.Printf("invalid %s=%q, using default %d", key, val, fallback)
+		return fallback
+	}
+	return n
 }
 
 // CorsAllowedOrigins returns origins allowed by CORS (main app + optional admin dashboard).

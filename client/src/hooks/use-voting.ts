@@ -1,88 +1,38 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
-import { apiListDetailToList, fetchListById } from '@/lib/api/lists';
-import type { ApiEntitySummary } from '@/lib/api/types';
+import { useListDetail } from '@/hooks/use-list-detail';
 import { tierLetterToApiValue } from '@/lib/tier-mapping';
 import { MIN_SUBMIT_DRIVER_RATIO } from '@/lib/constants';
-import { drivers } from '@/lib/mock/drivers';
-import { f1List, votingLists } from '@/lib/mock/lists';
 import { useVotingStore, type BoardDestination } from '@/store/voting-store';
 import {
   TIER_VALUES,
   type Entity,
+  type List,
   type PoolEntity,
   type Vote,
   type TierValue,
 } from '@/types';
-import type { List } from '@/types';
-
-function entitiesFromApi(rows: ApiEntitySummary[]): Entity[] {
-  return rows.map((e) => ({
-    id: e.id,
-    name: e.name,
-    team: e.team,
-    tags: e.tags,
-    imageUrl: e.imageUrl,
-  }));
-}
 
 export function useVoting(listId?: string) {
   const board = useVotingStore((state) => state.board);
   const moveEntity = useVotingStore((state) => state.moveEntity);
   const resetBoard = useVotingStore((state) => state.resetBoard);
 
-  const [remoteList, setRemoteList] = useState<List | null>(null);
-  const [remoteEntities, setRemoteEntities] = useState<Entity[] | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [isLoadingList, setIsLoadingList] = useState(false);
+  const {
+    list: remoteList,
+    entities: remoteEntities,
+    loadError,
+    isLoading,
+  } = useListDetail(listId);
 
-  useEffect(() => {
-    if (!listId) {
-      setRemoteList(null);
-      setRemoteEntities(null);
-      setLoadError(null);
-      return;
-    }
-
-    let cancelled = false;
-    setIsLoadingList(true);
-    setLoadError(null);
-
-    fetchListById(listId)
-      .then((detail) => {
-        if (cancelled) return;
-        setRemoteList(apiListDetailToList(detail));
-        setRemoteEntities(entitiesFromApi(detail.entities));
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setLoadError(
-          err instanceof Error ? err.message : 'Failed to load list'
-        );
-        setRemoteList(null);
-        setRemoteEntities(null);
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingList(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [listId]);
-
-  const list = useMemo(() => {
-    if (listId && remoteList) return remoteList;
-    if (listId) {
-      return votingLists.find((item) => item.id === listId) ?? f1List;
-    }
-    return f1List;
-  }, [listId, remoteList]);
+  const list = remoteList as List | null;
 
   const entitySource = useMemo(() => {
-    if (listId && remoteEntities) return remoteEntities;
-    return drivers;
-  }, [listId, remoteEntities]);
+    if (!remoteEntities?.length) return [];
+    return [...remoteEntities].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+    );
+  }, [remoteEntities]);
 
   const entitiesById = useMemo(() => {
     return entitySource.reduce<Record<string, Entity>>((acc, entity) => {
@@ -92,6 +42,7 @@ export function useVoting(listId?: string) {
   }, [entitySource]);
 
   const tiers = useMemo(() => {
+    if (!list) return [];
     return [...list.tiers].sort((a, b) => a.order - b.order);
   }, [list]);
 
@@ -118,6 +69,7 @@ export function useVoting(listId?: string) {
   const canSubmit = selectedCount >= minimumRequiredCount;
 
   const buildVotePayload = (userId: string): Vote[] => {
+    if (!list) return [];
     const createdAt = new Date().toISOString();
 
     return TIER_VALUES.flatMap((tier) =>
@@ -133,7 +85,7 @@ export function useVoting(listId?: string) {
   };
 
   const buildApiVoteLines = () => {
-    if (!list.tiersConfig) {
+    if (!list?.tiersConfig) {
       throw new Error('List tier configuration is missing');
     }
     return TIER_VALUES.flatMap((tier: TierValue) =>
@@ -162,6 +114,6 @@ export function useVoting(listId?: string) {
     buildVotePayload,
     buildApiVoteLines,
     loadError,
-    isLoadingList,
+    isLoadingList: Boolean(listId) && (isLoading || !remoteList),
   };
 }

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { IconUsers } from '@tabler/icons-react';
 import { TierBoard } from '@/pages/voting/components/tier-board';
 import type { Entity, Tier, TierBoardState } from '@/types';
@@ -9,6 +10,9 @@ type VoteAverageSummaryProps = {
   userBoard: TierBoardState;
   communityBoard: TierBoardState;
   totalVotes: number;
+  communityHidden?: boolean;
+  communityMessage?: string | null;
+  communityAction?: ReactNode;
 };
 
 export function VoteAverageSummary({
@@ -17,6 +21,9 @@ export function VoteAverageSummary({
   userBoard,
   communityBoard,
   totalVotes,
+  communityHidden = false,
+  communityMessage,
+  communityAction,
 }: VoteAverageSummaryProps) {
   return (
     <div className="space-y-6">
@@ -46,17 +53,34 @@ export function VoteAverageSummary({
           <p className="flex items-center gap-1.5 text-muted-foreground">
             <IconUsers className="size-4" />
             <span className="font-medium">
-              {totalVotes.toLocaleString()} Votes
+              {totalVotes.toLocaleString()} Voters
             </span>
           </p>
         </div>
 
-        <TierBoard
-          tiers={tiers}
-          board={communityBoard}
-          entitiesById={entitiesById}
-          emptyMessage="No votes in this tier"
-        />
+        {communityHidden ? (
+          <div className="relative rounded-xl border border-dashed border-border p-8 text-center space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {communityMessage ?? 'Community results are not available yet.'}
+            </p>
+            {communityAction}
+            <div className="pointer-events-none select-none opacity-30 blur-sm">
+              <TierBoard
+                tiers={tiers}
+                board={communityBoard}
+                entitiesById={entitiesById}
+                emptyMessage="No votes in this tier"
+              />
+            </div>
+          </div>
+        ) : (
+          <TierBoard
+            tiers={tiers}
+            board={communityBoard}
+            entitiesById={entitiesById}
+            emptyMessage="No votes in this tier"
+          />
+        )}
       </section>
     </div>
   );
