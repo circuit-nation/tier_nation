@@ -4,9 +4,8 @@ import {
   getTimeRemainingParts,
   subscribeToCountdownClock,
 } from '@/lib/countdown';
-import { createSubmission } from '@/lib/api/submissions';
-import { postVotes } from '@/lib/api/votes';
 import { useAuth } from '@/hooks/use-auth';
+import { useSubmitVotes } from '@/hooks/use-submit-votes';
 import type { Vote } from '@/types';
 import { Button } from '@/components/ui/button';
 import { IconRestore, IconShare } from '@tabler/icons-react';
@@ -22,9 +21,10 @@ type ActionBarProps = {
 
 export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
   const [submitMessage, setSubmitMessage] = useState<string>('');
-  const [submitError, setSubmitError] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [clientError, setClientError] = useState<string>('');
   const { accessToken, user, isAuthenticated, isAnonymous } = useAuth();
+  const { submit, isSubmitting, submitError, resetSubmitError } =
+    useSubmitVotes(listId);
   const nowMs = useSyncExternalStore(
     subscribeToCountdownClock,
     getCountdownNowSnapshot
@@ -79,7 +79,8 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
     }
 
     if (!isAuthenticated || !accessToken || !user) {
-      setSubmitError('Sign in to submit your votes.');
+      setClientError('Sign in to submit your votes.');
+      resetSubmitError();
       return;
     }
 
@@ -87,24 +88,23 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
     try {
       lines = buildApiVoteLines();
     } catch (err: unknown) {
-      setSubmitError(err instanceof Error ? err.message : 'Validation error');
+      setClientError(
+        err instanceof Error ? err.message : 'Validation error'
+      );
       return;
     }
 
     const payload = buildVotePayload(user.id);
 
-    setIsSubmitting(true);
-    setSubmitError('');
+    setClientError('');
+    resetSubmitError();
     try {
-      await createSubmission({ listId: list.id, isAnonymous }, accessToken);
-      await postVotes(
-        {
-          listId: list.id,
-          isAnonymous,
-          votes: lines,
-        },
-        accessToken
-      );
+      await submit({
+        listId: list.id,
+        isAnonymous,
+        votes: lines,
+        accessToken,
+      });
 
       const submittedAt = new Date().toLocaleTimeString([], {
         hour: '2-digit',
@@ -114,10 +114,8 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
         `Submitted ${payload.length} vote placements at ${submittedAt}`
       );
       await onSubmitted?.(payload);
-    } catch (err: unknown) {
-      setSubmitError(err instanceof Error ? err.message : 'Submission failed');
-    } finally {
-      setIsSubmitting(false);
+    } catch {
+      /* submitError surfaced from useSubmitVotes */
     }
   };
 
@@ -180,8 +178,10 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
       {submitMessage && (
         <p className="text-xs font-medium text-primary">{submitMessage}</p>
       )}
-      {submitError && (
-        <p className="text-xs font-medium text-red-500">{submitError}</p>
+      {(clientError || submitError) && (
+        <p className="text-xs font-medium text-red-500">
+          {clientError || submitError}
+        </p>
       )}
     </div>
   );

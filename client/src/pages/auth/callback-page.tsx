@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 
-import { useAuth } from '@/hooks/use-auth';
+import { useOAuthCallback } from '@/hooks/use-oauth-callback';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,37 +12,20 @@ import {
 import { getAccessTokenFromLocation } from '@/lib/auth';
 
 export function AuthCallbackPage() {
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
-  const navigate = useNavigate();
-  const { completeOAuthLogin } = useAuth();
+  const accessToken = getAccessTokenFromLocation(location.search);
+  const { isLoading, error, isComplete } = useOAuthCallback(
+    accessToken,
+    location.search
+  );
 
-  useEffect(() => {
-    const accessToken = getAccessTokenFromLocation(location.search);
+  if (!accessToken) {
+    return <Navigate to="/login" replace />;
+  }
 
-    if (!accessToken) {
-      navigate('/login', { replace: true });
-      return;
-    }
-
-    const completeAuth = async () => {
-      try {
-        await completeOAuthLogin(accessToken);
-        navigate('/', { replace: true });
-      } catch (authError) {
-        setError(
-          authError instanceof Error
-            ? authError.message
-            : 'Failed to complete sign in.'
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void completeAuth();
-  }, [completeOAuthLogin, location.search, navigate]);
+  if (isComplete) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4">

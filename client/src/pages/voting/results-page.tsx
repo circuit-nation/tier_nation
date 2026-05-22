@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 
-import { fetchEntityAverages } from '@/lib/api/averages';
 import { useAuth } from '@/hooks/use-auth';
+import { useResults } from '@/hooks/use-results';
 import { useVoting } from '@/hooks/use-voting';
-import { getVotesByList } from '@/lib/mock/votes';
 import { VoteAverageSummary } from '@/pages/voting/components/vote-average-summary';
 import { getRelativeTime } from '@/lib/utils';
 import LiveIndicator from '@/components/ui/live-dot';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { TierBoardState } from '@/types';
 import {
   buildCommunityBoard,
@@ -30,10 +30,12 @@ export function ResultsPage() {
   const { id } = useParams();
   const location = useLocation();
   const routeState = (location.state as ResultsLocationState | null) ?? null;
-  const [result, setResult] = useState<ResultsState | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string>('');
   const { accessToken } = useAuth();
   const { list, tiers, entitiesById } = useVoting(id);
+  const { data: resultsData, error: fetchError, isLoading } = useResults(
+    list.id,
+    accessToken
+  );
 
   const tierScores = useMemo(() => buildTierScores(list.tiers), [list.tiers]);
 
@@ -44,54 +46,36 @@ export function ResultsPage() {
       ? new Date() > new Date(startTime) && new Date() < new Date(endTime)
       : false;
 
-  useEffect(() => {
-    const loadResults = async () => {
-      setErrorMessage('');
-      const userBoard = routeState?.userBoard ?? createEmptyBoard();
+  const result = useMemo((): ResultsState | null => {
+    if (!resultsData) return null;
 
-      let communityBoard = createEmptyBoard();
-      let totalVotes = 0;
+    const userBoard = routeState?.userBoard ?? createEmptyBoard();
+    let communityBoard = createEmptyBoard();
+    let totalVotes = 0;
 
-      if (accessToken) {
-        try {
-          const { entityAverages } = await fetchEntityAverages(
-            list.id,
-            accessToken
-          );
-          communityBoard = buildCommunityBoardFromEntityAverages(
-            entityAverages,
-            tierScores
-          );
-          totalVotes = entityAverages.reduce(
-            (acc, row) => acc + row.voteCount,
-            0
-          );
-        } catch {
-          const listVotes = await getVotesByList(list.id);
-          const community = buildCommunityBoard(listVotes, tierScores);
-          communityBoard = community.board;
-          totalVotes = community.totals.totalVotes;
-        }
-      } else {
-        const listVotes = await getVotesByList(list.id);
-        const community = buildCommunityBoard(listVotes, tierScores);
-        communityBoard = community.board;
-        totalVotes = community.totals.totalVotes;
-      }
-
-      setResult({
-        userBoard,
-        communityBoard,
-        totalVotes,
-      });
-    };
-
-    loadResults().catch((error: unknown) => {
-      setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to load results.'
+    if (resultsData.source === 'api') {
+      communityBoard = buildCommunityBoardFromEntityAverages(
+        resultsData.entityAverages,
+        tierScores
       );
-    });
-  }, [list.id, routeState?.userBoard, tierScores, accessToken]);
+      totalVotes = resultsData.entityAverages.reduce(
+        (acc, row) => acc + row.voteCount,
+        0
+      );
+    } else {
+      const community = buildCommunityBoard(resultsData.votes, tierScores);
+      communityBoard = community.board;
+      totalVotes = community.totals.totalVotes;
+    }
+
+    return {
+      userBoard,
+      communityBoard,
+      totalVotes,
+    };
+  }, [resultsData, routeState?.userBoard, tierScores]);
+
+  const errorMessage = fetchError ?? '';
 
   return (
     <div className="space-y-4 py-10 pb-28 sm:pb-40 px-5">
@@ -119,6 +103,10 @@ export function ResultsPage() {
 
         {errorMessage ? (
           <p className="text-sm font-medium text-red-500">{errorMessage}</p>
+        ) : null}
+
+        {isLoading ? (
+          <Skeleton className="h-64 w-full max-w-4xl rounded-xl" />
         ) : null}
 
         {result ? (
