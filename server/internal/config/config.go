@@ -1,9 +1,11 @@
 package config
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -16,7 +18,7 @@ type Config struct {
 	GoogleClientSecret     string
 	GoogleRedirectURL      string
 	JWTSecret              string
-	ClientURL              string
+	ClientURL              string // comma-separated list of allowed origins
 	AdminClientURL         string
 	AdminBasicAuthUsername string
 	AdminBasicAuthPassword string
@@ -40,7 +42,7 @@ func Load() *Config {
 		GoogleClientSecret:     getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GoogleRedirectURL:      getEnv("GOOGLE_REDIRECT_URL", ""),
 		JWTSecret:              getEnv("JWT_SECRET", ""),
-		ClientURL:              getEnv("CLIENT_URL", "http://localhost:3000"),
+		ClientURL:              getEnv("CLIENT_URL", "http://localhost:5173"),
 		AdminClientURL:         getEnv("ADMIN_CLIENT_URL", ""),
 		AdminBasicAuthUsername: getEnv("ADMIN_BASIC_AUTH_USERNAME", ""),
 		AdminBasicAuthPassword: getEnv("ADMIN_BASIC_AUTH_PASSWORD", ""),
@@ -73,11 +75,86 @@ func getEnvInt(key string, fallback int) int {
 	return n
 }
 
+// ClientOrigins returns the allowed client origins parsed from CLIENT_URL.
+func (c *Config) ClientOrigins() []string {
+	return parseOriginList(c.ClientURL)
+}
+
+// PrimaryClientURL returns the first parsed client URL for redirect use.
+func (c *Config) PrimaryClientURL() string {
+	origins := parseOriginList(c.ClientURL)
+	if len(origins) > 0 {
+		return origins[0]
+	}
+	return strings.TrimSpace(c.ClientURL)
+}
+
 // CorsAllowedOrigins returns origins allowed by CORS (main app + optional admin dashboard).
 func (c *Config) CorsAllowedOrigins() []string {
-	origins := []string{c.ClientURL}
-	if c.AdminClientURL != "" {
-		origins = append(origins, c.AdminClientURL)
+	origins := parseOriginList(c.ClientURL)
+	if c.AdminClientURL == "" {
+		return origins
 	}
+	return appendUnique(origins, parseOriginList(c.AdminClientURL)...)
+}
+
+func parseOriginList(value string) []string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return nil
+	}
+
+	if strings.HasPrefix(trimmed, "[") {
+		var origins []string
+		if err := json.Unmarshal([]byte(trimmed), &origins); err == nil {
+			return normalizeOrigins(origins)
+		}
+		trimmed = strings.Trim(trimmed, "[]")
+	}
+
+	return normalizeOrigins(strings.Split(trimmed, ","))
+}
+
+func normalizeOrigins(parts []string) []string {
+	origins := make([]string, 0, len(parts))
+	seen := make(map[string]struct{}, len(parts))
+
+	for _, part := range parts {
+		origin := strings.TrimSpace(part)
+		origin = strings.Trim(origin, `"'`)
+		if origin == "" {
+			continue
+		}
+		if _, ok := seen[origin]; ok {
+			continue
+		}
+		origins = append(origins, origin)
+		seen[origin] = struct{}{}
+	}
+
+	return origins
+}
+
+func appendUnique(origins []string, additional ...string) []string {
+	if len(additional) == 0 {
+		return origins
+	}
+
+	seen := make(map[string]struct{}, len(origins))
+	for _, origin := range origins {
+		seen[origin] = struct{}{}
+	}
+
+	for _, origin := range additional {
+		if origin == "" {
+			continue
+		}
+		if _, ok := seen[origin]; ok {
+			continue
+		}
+		origins = append(origins, origin)
+		seen[origin] = struct{}{}
+	}
+
 	return origins
 }

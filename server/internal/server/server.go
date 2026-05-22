@@ -64,8 +64,9 @@ func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 	s.router.Use(gin.Logger())
 	s.router.Use(gin.Recovery())
 
+	allowedOrigins := cfg.CorsAllowedOrigins()
 	s.router.Use(cors.New(cors.Config{
-		AllowOrigins:     cfg.CorsAllowedOrigins(),
+		AllowOrigins:     allowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

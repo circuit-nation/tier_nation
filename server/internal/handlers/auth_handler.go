@@ -78,8 +78,9 @@ func (h *AuthHandler) GoogleCallback(ctx *gin.Context) {
 		return
 	}
 
-	ctx.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "", false, true)
-	ctx.Redirect(http.StatusTemporaryRedirect, h.config.ClientURL+"/auth/callback?access_token="+accessToken)
+	ctx.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "", false, true) // httpOnly cookie
+	ctx.Redirect(http.StatusTemporaryRedirect, h.config.PrimaryClientURL()+"/auth/callback?access_token="+accessToken)
+
 }
 
 func (h *AuthHandler) GetUserInfo(ctx *gin.Context) {
