@@ -22,7 +22,7 @@ export type NativeDropzoneProps = Pick<
 
 const DRAG_ENTITY_TYPE = 'application/x-tier-nation-entity-id';
 const FALLBACK_TEXT_TYPE = 'text/plain';
-const AUTO_SCROLL_EDGE_THRESHOLD = 150;
+const AUTO_SCROLL_EDGE_THRESHOLD = 10;
 const AUTO_SCROLL_MAX_STEP = 24;
 
 const toDestination = (rawValue?: string): BoardDestination | null => {
