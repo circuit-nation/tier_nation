@@ -1,31 +1,22 @@
-import { apiUrl, parseJson } from '@/lib/api/http';
-import type { ApiEntityAverageRow } from '@/lib/api/types';
+import { apiFetch } from '@/lib/api/http';
+import type {
+  ApiAverageScoreResponse,
+  ApiEntityAveragesResponse,
+} from '@/lib/api/types';
+
+export async function fetchEntityAverages(listId: string, accessToken: string) {
+  return apiFetch<ApiEntityAveragesResponse>(
+    `/lists/${encodeURIComponent(listId)}/entity-averages`,
+    { accessToken }
+  );
+}
 
 export async function fetchListAverageScore(
   listId: string,
   accessToken: string
 ) {
-  const res = await fetch(
-    apiUrl(`/lists/${encodeURIComponent(listId)}/average-score`),
-    {
-      credentials: 'include',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
+  return apiFetch<ApiAverageScoreResponse>(
+    `/lists/${encodeURIComponent(listId)}/average-score`,
+    { accessToken }
   );
-  return parseJson<{ listId: string; averageScore: number }>(res);
-}
-
-export async function fetchEntityAverages(listId: string, accessToken: string) {
-  const res = await fetch(
-    apiUrl(`/lists/${encodeURIComponent(listId)}/entity-averages`),
-    {
-      credentials: 'include',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
-  return parseJson<{ entityAverages: ApiEntityAverageRow[] }>(res);
 }

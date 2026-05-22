@@ -1,3 +1,5 @@
+import type { ApiTiersConfig, ApiVoteLine } from '@/lib/api/types';
+import { apiValueToTierLetter } from '@/lib/tier-mapping';
 import {
   calculateEntityAverageRankings,
   calculateVoteAverages,
@@ -36,6 +38,22 @@ export const mapVotesToBoard = (votes: Vote[]): TierBoardState => {
   }
   return mappedBoard;
 };
+
+export function buildUserBoardFromApiVotes(
+  lines: ApiVoteLine[],
+  tiersConfig: ApiTiersConfig
+): TierBoardState {
+  const board = createEmptyBoard();
+  const sorted = [...lines].sort((a, b) => {
+    if (a.tierValue !== b.tierValue) return a.tierValue - b.tierValue;
+    return (a.placementOrder ?? 0) - (b.placementOrder ?? 0);
+  });
+  for (const line of sorted) {
+    const tier = apiValueToTierLetter(tiersConfig, line.tierValue);
+    board[tier].push(line.entityId);
+  }
+  return board;
+}
 
 export const buildCommunityBoard = (
   votes: Vote[],

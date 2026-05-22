@@ -40,6 +40,11 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
     buildVotePayload,
     buildApiVoteLines,
   } = useVoting(listId);
+
+  if (!list) {
+    return null;
+  }
+
   const timeRemaining = getTimeRemainingParts(list.endTime, nowMs);
   const isLessThanOneHour =
     timeRemaining !== null &&
@@ -100,7 +105,7 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
     resetSubmitError();
     try {
       await submit({
-        listId: list.id,
+        listId,
         isAnonymous,
         votes: lines,
         accessToken,

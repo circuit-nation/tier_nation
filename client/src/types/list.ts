@@ -1,4 +1,4 @@
-import type { ApiTiersConfig } from '@/lib/api/types';
+import type { ApiTiersConfig, ApiUserStatus, ApiUserStatusCompact } from '@/lib/api/types';
 
 import type { Tier } from './tier';
 
@@ -14,4 +14,10 @@ export type List = {
   isVisible: boolean;
   startTime?: string;
   endTime?: string;
+  entityCount?: number;
+  status?: 'upcoming' | 'live' | 'ended' | 'locked' | 'archived';
+  isLive?: boolean;
+  votingOpen?: boolean;
+  votingClosedReason?: string;
+  userStatus?: ApiUserStatus | ApiUserStatusCompact;
 };

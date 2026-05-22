@@ -13,10 +13,15 @@ import (
 type SubmissionHandler struct {
 	submissions *services.SubmissionService
 	lists       *services.ListService
+	images      *services.ImageURLService
 }
 
-func NewSubmissionHandler(submissions *services.SubmissionService, lists *services.ListService) *SubmissionHandler {
-	return &SubmissionHandler{submissions: submissions, lists: lists}
+func NewSubmissionHandler(
+	submissions *services.SubmissionService,
+	lists *services.ListService,
+	images *services.ImageURLService,
+) *SubmissionHandler {
+	return &SubmissionHandler{submissions: submissions, lists: lists, images: images}
 }
 
 func (h *SubmissionHandler) CreateSubmission(ctx *gin.Context) {
@@ -56,16 +61,47 @@ func (h *SubmissionHandler) CreateSubmission(ctx *gin.Context) {
 		status = http.StatusOK
 	}
 
-	ctx.JSON(status, submissionJSON(sub))
+	voteCount, _ := h.submissions.VoteCountForUserList(userID, listID)
+	ctx.JSON(status, submissionJSON(sub, existed, voteCount))
 }
 
-func submissionJSON(s *models.Submission) gin.H {
+func (h *SubmissionHandler) GetMySubmissions(ctx *gin.Context) {
+	userID := ctx.MustGet("user_id").(uuid.UUID)
+
+	rows, err := h.submissions.ListMySubmissions(userID, h.images)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	items := make([]gin.H, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, gin.H{
+			"listId":           row.ListID.String(),
+			"listName":         row.ListName,
+			"coverImage":       row.CoverImage,
+			"submissionId":     row.SubmissionID.String(),
+			"submittedAt":      row.SubmittedAt,
+			"voteCount":        row.VoteCount,
+			"isAnonymous":      row.IsAnonymous,
+			"userAverageScore": row.UserAverageScore,
+		})
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"submissions": items})
+}
+
+func submissionJSON(s *models.Submission, existed bool, voteCount int64) gin.H {
+	hasSubmitted := voteCount > 0
 	return gin.H{
-		"id":          s.ID.String(),
-		"listId":      s.ListID.String(),
-		"userId":      s.UserID.String(),
-		"isAnonymous": s.IsAnonymous,
-		"createdAt":   s.CreatedAt,
-		"updatedAt":   s.UpdatedAt,
+		"id":           s.ID.String(),
+		"listId":       s.ListID.String(),
+		"userId":       s.UserID.String(),
+		"isAnonymous":  s.IsAnonymous,
+		"createdAt":    s.CreatedAt,
+		"updatedAt":    s.UpdatedAt,
+		"existed":      existed,
+		"hasSubmitted": hasSubmitted,
+		"voteCount":    voteCount,
 	}
 }

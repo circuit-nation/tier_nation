@@ -2,12 +2,12 @@ import { Navigate, createBrowserRouter } from 'react-router-dom';
 
 import { AppLayout } from '@/app/layout';
 import { RootRouteErrorBoundary } from '@/app/route-error';
-import { LIVE_LIST_ID } from '@/lib/constants';
 import { AuthCallbackPage } from '@/pages/auth/callback-page';
 import { LoginPage } from '@/pages/auth/login-page';
 import { HomePage } from '@/pages/home/home-page';
 import { ResultsPage } from '@/pages/voting/results-page';
 import { VotingPage } from '@/pages/voting/voting-page';
+import { VotingRedirectPage } from '@/pages/voting/voting-redirect-page';
 // import { RequireAuth } from '@/components/auth/require-auth';
 
 export const router = createBrowserRouter([
@@ -32,7 +32,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'voting',
-        element: <Navigate to={`/voting/${LIVE_LIST_ID}`} replace />,
+        element: <VotingRedirectPage />,
       },
       {
         path: 'voting/:listId',

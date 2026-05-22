@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { useDragDrop } from '@/hooks/use-drag-drop';
+import { useListDetail } from '@/hooks/use-list-detail';
 import { useVoting } from '@/hooks/use-voting';
 import { EntityPool } from '@/pages/voting/components/entity-pool';
 import { TierBoard } from '@/pages/voting/components/tier-board';
@@ -15,6 +17,7 @@ import { mapVotesToBoard } from './results-utils';
 export function VotingPage() {
   const navigate = useNavigate();
   const { listId } = useParams();
+  const { userStatus, isLoading: isLoadingMeta } = useListDetail(listId);
 
   const {
     list,
@@ -30,20 +33,20 @@ export function VotingPage() {
   const { activeEntityId, overDestination, draggableProps, dropzoneProps } =
     useDragDrop(moveEntity);
 
-  const startTime = list.startTime;
-  const endTime = list.endTime;
-  const isLive =
-    startTime && endTime
-      ? new Date() > new Date(startTime) && new Date() < new Date(endTime)
-      : false;
+  useEffect(() => {
+    if (!listId || !userStatus?.hasSubmitted) return;
+    navigate(`/results/${listId}`, { replace: true });
+  }, [listId, userStatus?.hasSubmitted, navigate]);
+
   const handleSubmitted = async (payload: Vote[]) => {
+    if (!list) return;
     const userBoard = mapVotesToBoard(payload);
     navigate(`/results/${list.id}`, {
       state: { userBoard },
     });
   };
 
-  if (listId && isLoadingList) {
+  if (!list || listId && (isLoadingList || isLoadingMeta)) {
     return (
       <div className="space-y-4 py-10 px-5 max-w-4xl mx-auto">
         <Skeleton className="h-10 w-2/3" />
@@ -51,6 +54,10 @@ export function VotingPage() {
         <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     );
+  }
+
+  if (userStatus?.hasSubmitted) {
+    return null;
   }
 
   if (listId && loadError) {
@@ -61,8 +68,28 @@ export function VotingPage() {
     );
   }
 
+  if (!list) {
+    return null;
+  }
+
+  const isLive =
+    list.isLive ??
+    (list.startTime && list.endTime
+      ? new Date() > new Date(list.startTime) &&
+        new Date() < new Date(list.endTime)
+      : false);
+
+  if (list.votingOpen === false && list.votingClosedReason) {
+    return (
+      <div className="py-10 px-5 max-w-4xl mx-auto">
+        <p className="text-center text-sm text-muted-foreground">
+          Voting is closed for this list ({list.votingClosedReason.replace('_', ' ')}).
+        </p>
+      </div>
+    );
+  }
+
   return (
-    // pb-28/pb-40 reserves space so the fixed pool doesn't overlap content
     <div className="space-y-4 py-10 pb-28 sm:pb-40 px-5">
       <section className="space-y-10">
         <div className="space-y-3">
@@ -106,7 +133,6 @@ export function VotingPage() {
         />
       </section>
 
-      {/* Entity Pool */}
       <EntityPool
         pool={pool}
         activeEntityId={activeEntityId}

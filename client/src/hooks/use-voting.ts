@@ -3,12 +3,11 @@ import { useMemo } from 'react';
 import { useListDetail } from '@/hooks/use-list-detail';
 import { tierLetterToApiValue } from '@/lib/tier-mapping';
 import { MIN_SUBMIT_DRIVER_RATIO } from '@/lib/constants';
-import { drivers } from '@/lib/mock/drivers';
-import { f1List, votingLists } from '@/lib/mock/lists';
 import { useVotingStore, type BoardDestination } from '@/store/voting-store';
 import {
   TIER_VALUES,
   type Entity,
+  type List,
   type PoolEntity,
   type Vote,
   type TierValue,
@@ -19,21 +18,21 @@ export function useVoting(listId?: string) {
   const moveEntity = useVotingStore((state) => state.moveEntity);
   const resetBoard = useVotingStore((state) => state.resetBoard);
 
-  const { list: remoteList, entities: remoteEntities, loadError, isLoading } =
-    useListDetail(listId);
+  const {
+    list: remoteList,
+    entities: remoteEntities,
+    loadError,
+    isLoading,
+  } = useListDetail(listId);
 
-  const list = useMemo(() => {
-    if (listId && remoteList) return remoteList;
-    if (listId) {
-      return votingLists.find((item) => item.id === listId) ?? f1List;
-    }
-    return f1List;
-  }, [listId, remoteList]);
+  const list = remoteList as List | null;
 
   const entitySource = useMemo(() => {
-    if (listId && remoteEntities) return remoteEntities;
-    return drivers;
-  }, [listId, remoteEntities]);
+    if (!remoteEntities?.length) return [];
+    return [...remoteEntities].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+    );
+  }, [remoteEntities]);
 
   const entitiesById = useMemo(() => {
     return entitySource.reduce<Record<string, Entity>>((acc, entity) => {
@@ -43,6 +42,7 @@ export function useVoting(listId?: string) {
   }, [entitySource]);
 
   const tiers = useMemo(() => {
+    if (!list) return [];
     return [...list.tiers].sort((a, b) => a.order - b.order);
   }, [list]);
 
@@ -69,6 +69,7 @@ export function useVoting(listId?: string) {
   const canSubmit = selectedCount >= minimumRequiredCount;
 
   const buildVotePayload = (userId: string): Vote[] => {
+    if (!list) return [];
     const createdAt = new Date().toISOString();
 
     return TIER_VALUES.flatMap((tier) =>
@@ -84,7 +85,7 @@ export function useVoting(listId?: string) {
   };
 
   const buildApiVoteLines = () => {
-    if (!list.tiersConfig) {
+    if (!list?.tiersConfig) {
       throw new Error('List tier configuration is missing');
     }
     return TIER_VALUES.flatMap((tier: TierValue) =>
@@ -113,6 +114,6 @@ export function useVoting(listId?: string) {
     buildVotePayload,
     buildApiVoteLines,
     loadError,
-    isLoadingList: isLoading,
+    isLoadingList: Boolean(listId) && (isLoading || !remoteList),
   };
 }

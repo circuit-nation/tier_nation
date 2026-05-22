@@ -13,16 +13,16 @@ import (
 )
 
 type Server struct {
-	router              *gin.Engine
-	config              *config.Config
-	authHandler         *handlers.AuthHandler
-	listHandler         *handlers.ListHandler
-	submissionHandler   *handlers.SubmissionHandler
-	voteHandler         *handlers.VoteHandler
-	adminHandler        *handlers.AdminHandler
-	adminAuthService    *services.AdminAuthService
-	db                  *gorm.DB
-	jwtService          *services.JWTService
+	router            *gin.Engine
+	config            *config.Config
+	authHandler       *handlers.AuthHandler
+	listHandler       *handlers.ListHandler
+	submissionHandler *handlers.SubmissionHandler
+	voteHandler       *handlers.VoteHandler
+	adminHandler      *handlers.AdminHandler
+	adminAuthService  *services.AdminAuthService
+	db                *gorm.DB
+	jwtService        *services.JWTService
 }
 
 func NewServer(cfg *config.Config, db *gorm.DB) *Server {
@@ -32,7 +32,8 @@ func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 
 	jwtService := services.NewJWTService(cfg)
 	authService := services.NewAuthService(cfg, db, jwtService)
-	authHandler := handlers.NewAuthHandler(authService, jwtService, cfg)
+	userListStatus := services.NewUserListStatusService(db)
+	authHandler := handlers.NewAuthHandler(authService, jwtService, userListStatus, cfg)
 
 	listService := services.NewListService(db)
 	entityService := services.NewEntityService(db)
@@ -42,8 +43,8 @@ func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 	adminAuthService := services.NewAdminAuthService(cfg)
 	imageURLService := services.NewImageURLService(cfg)
 
-	listHandler := handlers.NewListHandler(listService, aggregationService, imageURLService)
-	submissionHandler := handlers.NewSubmissionHandler(submissionService, listService)
+	listHandler := handlers.NewListHandler(listService, aggregationService, imageURLService, userListStatus)
+	submissionHandler := handlers.NewSubmissionHandler(submissionService, listService, imageURLService)
 	voteHandler := handlers.NewVoteHandler(voteService)
 	adminHandler := handlers.NewAdminHandler(listService, entityService, imageURLService)
 
@@ -82,7 +83,6 @@ func (s *Server) setupRoutes() {
 		ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// v1 routes
 	v1 := s.router.Group("/api/v1")
 	{
 		auth := v1.Group("/auth")
@@ -93,15 +93,19 @@ func (s *Server) setupRoutes() {
 			auth.POST("/logout", s.authHandler.Logout)
 		}
 
-		v1.GET("/lists", s.listHandler.GetLists)
-		v1.GET("/lists/:id", s.listHandler.GetList)
+		optionalAuth := middleware.OptionalAuth(s.jwtService)
+		v1.GET("/lists", optionalAuth, s.listHandler.GetLists)
+		v1.GET("/lists/:id", optionalAuth, s.listHandler.GetList)
+		v1.GET("/lists/:id/stats", s.listHandler.GetListStats)
 
 		protected := v1.Group("/")
 		protected.Use(middleware.AuthMiddleware(s.jwtService))
 		{
 			protected.GET("/me", s.authHandler.GetUserInfo)
+			protected.GET("/me/submissions", s.submissionHandler.GetMySubmissions)
 			protected.POST("/submissions", s.submissionHandler.CreateSubmission)
 			protected.POST("/votes", s.voteHandler.PostVotes)
+			protected.GET("/lists/:id/votes/me", s.voteHandler.GetVotesMe)
 			protected.GET("/lists/:id/average-score", s.listHandler.GetAverageScore)
 			protected.GET("/lists/:id/entity-averages", s.listHandler.GetEntityAverages)
 		}
@@ -110,6 +114,7 @@ func (s *Server) setupRoutes() {
 		admin.Use(middleware.AdminBasicAuth(s.adminAuthService))
 		{
 			admin.POST("/lists", s.adminHandler.CreateTierList)
+			admin.GET("/entities", s.adminHandler.ListEntities)
 			admin.POST("/entities", s.adminHandler.CreateEntities)
 			admin.POST("/lists/:listId/entities", s.adminHandler.AddEntitiesToList)
 			admin.PATCH("/lists/:listId/entities/order", s.adminHandler.ReorderListEntities)

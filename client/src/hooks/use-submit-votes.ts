@@ -1,7 +1,6 @@
 import useSWRMutation from 'swr/mutation';
 import { mutate } from 'swr';
 
-import { createSubmission } from '@/lib/api/submissions';
 import type { ApiPostVotesBody } from '@/lib/api/types';
 import { postVotes } from '@/lib/api/votes';
 import { swrKeys } from '@/lib/swr/keys';
@@ -17,10 +16,6 @@ async function submitVotesMutation(
   _key: ReturnType<typeof swrKeys.submitVotes>,
   { arg }: { arg: SubmitVotesArg }
 ) {
-  await createSubmission(
-    { listId: arg.listId, isAnonymous: arg.isAnonymous },
-    arg.accessToken
-  );
   return postVotes(
     {
       listId: arg.listId,
@@ -34,7 +29,9 @@ async function submitVotesMutation(
 export function invalidateResultsForList(listId: string) {
   return mutate(
     (key) =>
-      Array.isArray(key) && key[0] === 'results' && key[1] === listId,
+      Array.isArray(key) &&
+      (key[0] === 'results' || key[0] === 'votes' || key[0] === 'list') &&
+      key.includes(listId),
     undefined,
     { revalidate: true }
   );

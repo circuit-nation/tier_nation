@@ -25,3 +25,14 @@ export function tierLetterToApiValue(
   }
   return entry.value;
 }
+
+export function apiValueToTierLetter(
+  config: ApiTiersConfig,
+  value: number
+): TierValue {
+  const entry = config.tiers.find((x) => x.value === value);
+  if (!entry) {
+    throw new Error(`Tier value ${value} is not configured for this list`);
+  }
+  return entry.label as TierValue;
+}
