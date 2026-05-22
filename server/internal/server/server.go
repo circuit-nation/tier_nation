@@ -40,11 +40,12 @@ func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 	voteService := services.NewVoteService(db, listService)
 	aggregationService := services.NewAggregationService(db)
 	adminAuthService := services.NewAdminAuthService(cfg)
+	imageURLService := services.NewImageURLService(cfg)
 
-	listHandler := handlers.NewListHandler(listService, aggregationService)
+	listHandler := handlers.NewListHandler(listService, aggregationService, imageURLService)
 	submissionHandler := handlers.NewSubmissionHandler(submissionService, listService)
 	voteHandler := handlers.NewVoteHandler(voteService)
-	adminHandler := handlers.NewAdminHandler(listService, entityService)
+	adminHandler := handlers.NewAdminHandler(listService, entityService, imageURLService)
 
 	s := &Server{
 		router:            gin.New(),

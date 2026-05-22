@@ -13,12 +13,13 @@ import (
 )
 
 type ListHandler struct {
-	lists *services.ListService
-	agg   *services.AggregationService
+	lists  *services.ListService
+	agg    *services.AggregationService
+	images *services.ImageURLService
 }
 
-func NewListHandler(lists *services.ListService, agg *services.AggregationService) *ListHandler {
-	return &ListHandler{lists: lists, agg: agg}
+func NewListHandler(lists *services.ListService, agg *services.AggregationService, images *services.ImageURLService) *ListHandler {
+	return &ListHandler{lists: lists, agg: agg, images: images}
 }
 
 func (h *ListHandler) GetLists(ctx *gin.Context) {
@@ -33,7 +34,7 @@ func (h *ListHandler) GetLists(ctx *gin.Context) {
 
 	out := make([]gin.H, 0, len(lists))
 	for i := range lists {
-		out = append(out, tierListJSON(&lists[i]))
+		out = append(out, tierListJSON(&lists[i], h.images))
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"lists": out})
@@ -62,8 +63,8 @@ func (h *ListHandler) GetList(ctx *gin.Context) {
 		return
 	}
 
-	payload := tierListJSON(list)
-	payload["entities"] = entitySummariesJSON(entities)
+	payload := tierListJSON(list, h.images)
+	payload["entities"] = entitySummariesJSON(entities, h.images)
 	ctx.JSON(http.StatusOK, payload)
 }
 
@@ -118,7 +119,7 @@ func (h *ListHandler) GetEntityAverages(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"entityAverages": rows})
 }
 
-func tierListJSON(t *models.TierList) gin.H {
+func tierListJSON(t *models.TierList, images *services.ImageURLService) gin.H {
 	var tiersCfg any
 	if len(t.TiersConfig) > 0 {
 		_ = json.Unmarshal(t.TiersConfig, &tiersCfg)
@@ -131,7 +132,7 @@ func tierListJSON(t *models.TierList) gin.H {
 		"id":           t.ID.String(),
 		"name":         t.Name,
 		"description":  t.Description,
-		"coverImage":   t.CoverImage,
+		"coverImage":   images.Resolve(t.CoverImage),
 		"tiersConfig":  tiersCfg,
 		"isLocked":     t.IsLocked,
 		"isVisible":    t.IsVisible,
@@ -147,7 +148,7 @@ func tierListJSON(t *models.TierList) gin.H {
 	return h
 }
 
-func entitySummariesJSON(entities []models.Entity) []gin.H {
+func entitySummariesJSON(entities []models.Entity, images *services.ImageURLService) []gin.H {
 	out := make([]gin.H, 0, len(entities))
 	for _, e := range entities {
 		item := gin.H{
@@ -156,7 +157,7 @@ func entitySummariesJSON(entities []models.Entity) []gin.H {
 			"description": e.Description,
 			"team":        e.Team,
 			"tags":        []string(e.Tags),
-			"imageUrl":    e.ImageURL,
+			"imageUrl":    images.Resolve(e.ImageURL),
 		}
 		out = append(out, item)
 	}

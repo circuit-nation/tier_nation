@@ -16,10 +16,11 @@ import (
 type AdminHandler struct {
 	lists    *services.ListService
 	entities *services.EntityService
+	images   *services.ImageURLService
 }
 
-func NewAdminHandler(lists *services.ListService, entities *services.EntityService) *AdminHandler {
-	return &AdminHandler{lists: lists, entities: entities}
+func NewAdminHandler(lists *services.ListService, entities *services.EntityService, images *services.ImageURLService) *AdminHandler {
+	return &AdminHandler{lists: lists, entities: entities, images: images}
 }
 
 func (h *AdminHandler) CreateTierList(ctx *gin.Context) {
@@ -53,7 +54,7 @@ func (h *AdminHandler) CreateTierList(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, tierListJSON(list))
+	ctx.JSON(http.StatusCreated, tierListJSON(list, h.images))
 }
 
 func (h *AdminHandler) CreateEntities(ctx *gin.Context) {
@@ -202,7 +203,7 @@ func (h *AdminHandler) UpdateTierList(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, tierListJSON(list))
+	ctx.JSON(http.StatusOK, tierListJSON(list, h.images))
 }
 
 func (h *AdminHandler) DeleteTierList(ctx *gin.Context) {
@@ -258,7 +259,7 @@ func (h *AdminHandler) UpdateEntity(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, entityAdminJSON(ent))
+	ctx.JSON(http.StatusOK, entityAdminJSON(ent, h.images))
 }
 
 func (h *AdminHandler) DeleteEntity(ctx *gin.Context) {
@@ -344,14 +345,14 @@ func (h *AdminHandler) ReorderListEntities(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "entity order updated"})
 }
 
-func entityAdminJSON(e *models.Entity) gin.H {
+func entityAdminJSON(e *models.Entity, images *services.ImageURLService) gin.H {
 	return gin.H{
 		"id":          e.ID.String(),
 		"name":        e.Name,
 		"description": e.Description,
 		"team":        e.Team,
 		"tags":        []string(e.Tags),
-		"imageUrl":    e.ImageURL,
+		"imageUrl":    images.Resolve(e.ImageURL),
 		"createdAt":   e.CreatedAt,
 		"updatedAt":   e.UpdatedAt,
 	}
