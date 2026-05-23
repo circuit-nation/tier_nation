@@ -1,6 +1,7 @@
 name: Ping Server
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '*/12 * * * *' # Every 12 minutes
 
