@@ -87,7 +87,7 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
     let tokenToUse = accessToken;
     const submitAsAnonymous = !isAuthenticated || isAnonymous;
 
-    if (!isAuthenticated || !accessToken) {
+    if (!isAuthenticated) {
       try {
         tokenToUse = await postGuestLogin();
       } catch {
