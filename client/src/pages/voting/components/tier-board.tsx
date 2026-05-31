@@ -13,6 +13,7 @@ type TierBoardProps = {
   draggableProps?: NativeDraggableProps;
   dropzoneProps?: NativeDropzoneProps;
   activeEntityId?: string | null;
+  selectedEntityId?: string | null;
   overDestination?: BoardDestination | null;
   emptyMessage?: string;
 };
@@ -24,6 +25,7 @@ export function TierBoard({
   draggableProps,
   dropzoneProps,
   activeEntityId,
+  selectedEntityId,
   overDestination,
   emptyMessage,
 }: TierBoardProps) {
@@ -42,6 +44,7 @@ export function TierBoard({
             draggableProps={draggableProps}
             dropzoneProps={dropzoneProps}
             activeEntityId={activeEntityId}
+            selectedEntityId={selectedEntityId}
             isOver={overDestination === tier.value}
             emptyMessage={emptyMessage}
           />

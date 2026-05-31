@@ -21,6 +21,7 @@ interface EntityPoolProps {
   isOver: boolean;
   draggableProps: NativeDraggableProps;
   dropzoneProps: NativeDropzoneProps;
+  selectedEntityId?: string | null;
 }
 
 type SortOrder = 'default' | 'asc' | 'desc';
@@ -33,6 +34,7 @@ export function EntityPool({
   isOver,
   draggableProps,
   dropzoneProps,
+  selectedEntityId,
 }: EntityPoolProps) {
   const [sortOrder, setSortOrder] = useState<SortOrder>('default');
   const [showLeftGradient, setShowLeftGradient] = useState(false);
@@ -178,6 +180,7 @@ export function EntityPool({
                     className={cn(entity.placed && 'opacity-40')}
                     dragProps={entity.placed ? undefined : draggableProps}
                     isDragging={activeEntityId === entity.id}
+                    isSelected={selectedEntityId === entity.id}
                   />
 
                   {/* Placed checkmark overlay */}

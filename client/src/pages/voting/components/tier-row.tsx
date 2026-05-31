@@ -13,6 +13,7 @@ type TierRowProps = {
   draggableProps?: NativeDraggableProps;
   dropzoneProps?: NativeDropzoneProps;
   activeEntityId?: string | null;
+  selectedEntityId?: string | null;
   isOver?: boolean;
   emptyMessage?: string;
 };
@@ -23,8 +24,9 @@ export function TierRow({
   draggableProps,
   dropzoneProps,
   activeEntityId,
+  selectedEntityId,
   isOver = false,
-  emptyMessage = 'Drop items here',
+  emptyMessage = 'Drop or tap to place items here',
 }: TierRowProps) {
   return (
     <section
@@ -60,6 +62,7 @@ export function TierRow({
                 mode="compact"
                 dragProps={draggableProps}
                 isDragging={activeEntityId === entity.id}
+                isSelected={selectedEntityId === entity.id}
               />
             ))}
           </div>

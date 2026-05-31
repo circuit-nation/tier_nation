@@ -30,7 +30,7 @@ export function VotingPage() {
     isLoadingList,
   } = useVoting(listId);
 
-  const { activeEntityId, overDestination, draggableProps, dropzoneProps } =
+  const { activeEntityId, overDestination, draggableProps, dropzoneProps, selectedEntityId } =
     useDragDrop(moveEntity);
 
   useEffect(() => {
@@ -129,6 +129,7 @@ export function VotingPage() {
           draggableProps={draggableProps}
           dropzoneProps={dropzoneProps}
           activeEntityId={activeEntityId}
+          selectedEntityId={selectedEntityId}
           overDestination={overDestination}
         />
       </section>
@@ -139,6 +140,7 @@ export function VotingPage() {
         isOver={overDestination === 'POOL'}
         draggableProps={draggableProps}
         dropzoneProps={dropzoneProps}
+        selectedEntityId={selectedEntityId}
       />
     </div>
   );
