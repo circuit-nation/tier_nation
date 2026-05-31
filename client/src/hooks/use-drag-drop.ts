@@ -5,6 +5,7 @@ import {
   useState,
   type DragEvent,
   type HTMLAttributes,
+  type MouseEvent,
 } from 'react';
 
 import type { BoardDestination } from '@/store/voting-store';
@@ -13,11 +14,11 @@ import { TIER_VALUES, type TierValue } from '@/types';
 type MoveEntityFn = (entityId: string, toTier: BoardDestination) => void;
 export type NativeDraggableProps = Pick<
   HTMLAttributes<HTMLElement>,
-  'draggable' | 'onDragStart' | 'onDrag' | 'onDragEnd'
+  'draggable' | 'onDragStart' | 'onDrag' | 'onDragEnd' | 'onClick'
 >;
 export type NativeDropzoneProps = Pick<
   HTMLAttributes<HTMLElement>,
-  'onDragEnter' | 'onDragOver' | 'onDragLeave' | 'onDrop'
+  'onDragEnter' | 'onDragOver' | 'onDragLeave' | 'onDrop' | 'onClick'
 >;
 
 const DRAG_ENTITY_TYPE = 'application/x-tier-nation-entity-id';
@@ -26,38 +27,23 @@ const AUTO_SCROLL_EDGE_THRESHOLD = 10;
 const AUTO_SCROLL_MAX_STEP = 24;
 
 const toDestination = (rawValue?: string): BoardDestination | null => {
-  if (!rawValue) {
-    return null;
-  }
-
-  if (rawValue === 'POOL' || rawValue === 'pool-drop') {
-    return 'POOL';
-  }
-
-  if (TIER_VALUES.includes(rawValue as TierValue)) {
-    return rawValue as TierValue;
-  }
-
-  if (!rawValue.startsWith('tier-')) {
-    return null;
-  }
-
+  if (!rawValue) return null;
+  if (rawValue === 'POOL' || rawValue === 'pool-drop') return 'POOL';
+  if (TIER_VALUES.includes(rawValue as TierValue)) return rawValue as TierValue;
+  if (!rawValue.startsWith('tier-')) return null;
   const tier = rawValue.replace('tier-', '');
-
-  if (!TIER_VALUES.includes(tier as TierValue)) {
-    return null;
-  }
-
+  if (!TIER_VALUES.includes(tier as TierValue)) return null;
   return tier as TierValue;
 };
 
 export function useDragDrop(moveEntity: MoveEntityFn) {
   const [activeEntityId, setActiveEntityId] = useState<string | null>(null);
-  const [overDestination, setOverDestination] =
-    useState<BoardDestination | null>(null);
+  const [overDestination, setOverDestination] = useState<BoardDestination | null>(null);
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const overDestinationRef = useRef<BoardDestination | null>(null);
   const pointerClientYRef = useRef<number | null>(null);
   const scrollFrameRef = useRef<number | null>(null);
+  const didDragRef = useRef(false);
 
   const stopAutoScroll = useCallback(() => {
     if (scrollFrameRef.current !== null) {
@@ -68,64 +54,33 @@ export function useDragDrop(moveEntity: MoveEntityFn) {
 
   const autoScrollStep = useCallback(function step() {
     const pointerY = pointerClientYRef.current;
-
-    if (pointerY === null) {
-      scrollFrameRef.current = null;
-      return;
-    }
-
+    if (pointerY === null) { scrollFrameRef.current = null; return; }
     const viewportHeight = window.innerHeight;
     const topEdge = AUTO_SCROLL_EDGE_THRESHOLD;
     const bottomEdge = viewportHeight - AUTO_SCROLL_EDGE_THRESHOLD;
     let delta = 0;
-
     if (pointerY < topEdge) {
-      delta = -Math.ceil(
-        ((topEdge - pointerY) / topEdge) * AUTO_SCROLL_MAX_STEP
-      );
+      delta = -Math.ceil(((topEdge - pointerY) / topEdge) * AUTO_SCROLL_MAX_STEP);
     } else if (pointerY > bottomEdge) {
-      delta = Math.ceil(
-        ((pointerY - bottomEdge) / AUTO_SCROLL_EDGE_THRESHOLD) *
-          AUTO_SCROLL_MAX_STEP
-      );
+      delta = Math.ceil(((pointerY - bottomEdge) / AUTO_SCROLL_EDGE_THRESHOLD) * AUTO_SCROLL_MAX_STEP);
     }
-
-    if (delta === 0) {
-      scrollFrameRef.current = null;
-      return;
-    }
-
+    if (delta === 0) { scrollFrameRef.current = null; return; }
     const scrollBefore = window.scrollY;
     window.scrollBy({ top: delta, behavior: 'auto' });
     const scrollAfter = window.scrollY;
-
-    if (scrollAfter === scrollBefore) {
-      scrollFrameRef.current = null;
-      return;
-    }
-
+    if (scrollAfter === scrollBefore) { scrollFrameRef.current = null; return; }
     scrollFrameRef.current = window.requestAnimationFrame(step);
   }, []);
 
-  const syncOverDestination = useCallback(
-    (destination: BoardDestination | null) => {
-      if (overDestinationRef.current === destination) {
-        return;
-      }
-
-      overDestinationRef.current = destination;
-      setOverDestination(destination);
-    },
-    []
-  );
+  const syncOverDestination = useCallback((destination: BoardDestination | null) => {
+    if (overDestinationRef.current === destination) return;
+    overDestinationRef.current = destination;
+    setOverDestination(destination);
+  }, []);
 
   const onDragStart = useCallback((event: DragEvent<HTMLElement>) => {
     const entityId = event.currentTarget.dataset.entityId;
-
-    if (!entityId) {
-      return;
-    }
-
+    if (!entityId) return;
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData(DRAG_ENTITY_TYPE, entityId);
     event.dataTransfer.setData(FALLBACK_TEXT_TYPE, entityId);
@@ -133,141 +88,90 @@ export function useDragDrop(moveEntity: MoveEntityFn) {
     setActiveEntityId(entityId);
   }, []);
 
-  const onDrag = useCallback(
-    (event: DragEvent<HTMLElement>) => {
-      if (!activeEntityId) {
-        return;
-      }
-
-      if (event.clientY > 0) {
-        pointerClientYRef.current = event.clientY;
-      }
-
-      const pointerY = pointerClientYRef.current;
-
-      if (pointerY === null) {
-        return;
-      }
-
-      const nearEdge =
-        pointerY < AUTO_SCROLL_EDGE_THRESHOLD ||
-        pointerY > window.innerHeight - AUTO_SCROLL_EDGE_THRESHOLD;
-
-      if (nearEdge) {
-        if (scrollFrameRef.current === null) {
-          scrollFrameRef.current = window.requestAnimationFrame(autoScrollStep);
-        }
-        return;
-      }
-
-      stopAutoScroll();
-    },
-    [activeEntityId, autoScrollStep, stopAutoScroll]
-  );
+  const onDrag = useCallback((event: DragEvent<HTMLElement>) => {
+    if (!activeEntityId) return;
+    if (event.clientY > 0) pointerClientYRef.current = event.clientY;
+    const pointerY = pointerClientYRef.current;
+    if (pointerY === null) return;
+    const nearEdge = pointerY < AUTO_SCROLL_EDGE_THRESHOLD || pointerY > window.innerHeight - AUTO_SCROLL_EDGE_THRESHOLD;
+    if (nearEdge) {
+      if (scrollFrameRef.current === null) scrollFrameRef.current = window.requestAnimationFrame(autoScrollStep);
+      return;
+    }
+    stopAutoScroll();
+  }, [activeEntityId, autoScrollStep, stopAutoScroll]);
 
   const onDragEnd = useCallback(() => {
+    didDragRef.current = true;
     pointerClientYRef.current = null;
     stopAutoScroll();
     setActiveEntityId(null);
     syncOverDestination(null);
   }, [stopAutoScroll, syncOverDestination]);
 
-  const onDragEnter = useCallback(
-    (event: DragEvent<HTMLElement>) => {
-      const destination = toDestination(
-        event.currentTarget.dataset.destination
-      );
+  const onDragEnter = useCallback((event: DragEvent<HTMLElement>) => {
+    const destination = toDestination(event.currentTarget.dataset.destination);
+    if (!destination) return;
+    syncOverDestination(destination);
+  }, [syncOverDestination]);
 
-      if (!destination) {
-        return;
-      }
+  const onDragOver = useCallback((event: DragEvent<HTMLElement>) => {
+    const destination = toDestination(event.currentTarget.dataset.destination);
+    if (!destination) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    syncOverDestination(destination);
+  }, [syncOverDestination]);
 
-      syncOverDestination(destination);
-    },
-    [syncOverDestination]
-  );
+  const onDragLeave = useCallback((event: DragEvent<HTMLElement>) => {
+    const destination = toDestination(event.currentTarget.dataset.destination);
+    if (!destination) return;
+    const relatedTarget = event.relatedTarget;
+    if (relatedTarget instanceof Node && event.currentTarget.contains(relatedTarget)) return;
+    if (overDestinationRef.current === destination) syncOverDestination(null);
+  }, [syncOverDestination]);
 
-  const onDragOver = useCallback(
-    (event: DragEvent<HTMLElement>) => {
-      const destination = toDestination(
-        event.currentTarget.dataset.destination
-      );
-
-      if (!destination) {
-        return;
-      }
-
-      event.preventDefault();
-      event.dataTransfer.dropEffect = 'move';
-      syncOverDestination(destination);
-    },
-    [syncOverDestination]
-  );
-
-  const onDragLeave = useCallback(
-    (event: DragEvent<HTMLElement>) => {
-      const destination = toDestination(
-        event.currentTarget.dataset.destination
-      );
-
-      if (!destination) {
-        return;
-      }
-
-      const relatedTarget = event.relatedTarget;
-
-      if (
-        relatedTarget instanceof Node &&
-        event.currentTarget.contains(relatedTarget)
-      ) {
-        return;
-      }
-
-      if (overDestinationRef.current === destination) {
-        syncOverDestination(null);
-      }
-    },
-    [syncOverDestination]
-  );
-
-  const onDrop = useCallback(
-    (event: DragEvent<HTMLElement>) => {
-      const destination = toDestination(
-        event.currentTarget.dataset.destination
-      );
-
-      if (!destination) {
-        return;
-      }
-
-      event.preventDefault();
-
-      const entityId =
-        event.dataTransfer.getData(DRAG_ENTITY_TYPE) ||
-        event.dataTransfer.getData(FALLBACK_TEXT_TYPE);
-
-      if (!entityId) {
-        pointerClientYRef.current = null;
-        stopAutoScroll();
-        setActiveEntityId(null);
-        syncOverDestination(null);
-        return;
-      }
-
-      moveEntity(entityId, destination);
+  const onDrop = useCallback((event: DragEvent<HTMLElement>) => {
+    const destination = toDestination(event.currentTarget.dataset.destination);
+    if (!destination) return;
+    event.preventDefault();
+    const entityId = event.dataTransfer.getData(DRAG_ENTITY_TYPE) || event.dataTransfer.getData(FALLBACK_TEXT_TYPE);
+    if (!entityId) {
       pointerClientYRef.current = null;
       stopAutoScroll();
       setActiveEntityId(null);
       syncOverDestination(null);
-    },
-    [moveEntity, stopAutoScroll, syncOverDestination]
-  );
+      return;
+    }
+    moveEntity(entityId, destination);
+    pointerClientYRef.current = null;
+    stopAutoScroll();
+    setActiveEntityId(null);
+    syncOverDestination(null);
+  }, [moveEntity, stopAutoScroll, syncOverDestination]);
+
+  const onEntityClick = useCallback((event: MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    if (didDragRef.current) {
+      didDragRef.current = false;
+      return;
+    }
+    const entityId = event.currentTarget.dataset.entityId;
+    if (!entityId) return;
+    setSelectedEntityId((prev) => (prev === entityId ? null : entityId));
+  }, []);
+
+  const onDropzoneClick = useCallback((event: MouseEvent<HTMLElement>) => {
+    if (!selectedEntityId) return;
+    const destination = toDestination(event.currentTarget.dataset.destination);
+    if (!destination) return;
+    moveEntity(selectedEntityId, destination);
+    setSelectedEntityId(null);
+  }, [selectedEntityId, moveEntity]);
 
   useEffect(() => {
     return () => {
-      if (scrollFrameRef.current !== null) {
-        cancelAnimationFrame(scrollFrameRef.current);
-      }
+      if (scrollFrameRef.current !== null) cancelAnimationFrame(scrollFrameRef.current);
     };
   }, []);
 
@@ -276,6 +180,7 @@ export function useDragDrop(moveEntity: MoveEntityFn) {
     onDragStart,
     onDrag,
     onDragEnd,
+    onClick: onEntityClick,
   };
 
   const dropzoneProps: NativeDropzoneProps = {
@@ -283,6 +188,7 @@ export function useDragDrop(moveEntity: MoveEntityFn) {
     onDragOver,
     onDragLeave,
     onDrop,
+    onClick: onDropzoneClick,
   };
 
   return {
@@ -290,5 +196,6 @@ export function useDragDrop(moveEntity: MoveEntityFn) {
     overDestination,
     draggableProps,
     dropzoneProps,
+    selectedEntityId,
   };
 }

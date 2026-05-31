@@ -13,6 +13,7 @@ import { SubmitButton } from '@/pages/voting/components/submit-button';
 import { useVoting } from '@/hooks/use-voting';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { postGuestLogin } from '@/lib/api/auth';
 
 type ActionBarProps = {
   listId: string;
@@ -83,10 +84,16 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
       return;
     }
 
-    if (!isAuthenticated || !accessToken || !user) {
-      setClientError('Sign in to submit your votes.');
-      resetSubmitError();
-      return;
+    let tokenToUse = accessToken;
+    const submitAsAnonymous = !isAuthenticated || isAnonymous;
+
+    if (!isAuthenticated) {
+      try {
+        tokenToUse = await postGuestLogin();
+      } catch {
+        setClientError('Failed to start anonymous session. Please try again.');
+        return;
+      }
     }
 
     let lines: ReturnType<typeof buildApiVoteLines>;
@@ -99,16 +106,16 @@ export default function ActionBar({ listId, onSubmitted }: ActionBarProps) {
       return;
     }
 
-    const payload = buildVotePayload(user.id);
+    const payload = buildVotePayload(user?.id ?? 'anonymous');
 
     setClientError('');
     resetSubmitError();
     try {
       await submit({
         listId,
-        isAnonymous,
+        isAnonymous: submitAsAnonymous,
         votes: lines,
-        accessToken,
+        accessToken: tokenToUse!,
       });
 
       const submittedAt = new Date().toLocaleTimeString([], {

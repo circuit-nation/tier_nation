@@ -8,9 +8,10 @@ type EntityCardProps = {
   className?: string;
   mode?: 'default' | 'compact';
   isDragging?: boolean;
+  isSelected?: boolean;
   dragProps?: Pick<
     ButtonHTMLAttributes<HTMLButtonElement>,
-    'draggable' | 'onDragStart' | 'onDragEnd'
+    'draggable' | 'onDragStart' | 'onDragEnd' | 'onClick'
   >;
 };
 
@@ -19,6 +20,7 @@ export function EntityCard({
   className,
   mode = 'default',
   isDragging = false,
+  isSelected = false,
   dragProps,
 }: EntityCardProps) {
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
@@ -30,16 +32,10 @@ export function EntityCard({
       const source = parts[parts.length - 1] ?? entity.name;
       return source.slice(0, 3).toUpperCase();
     }
-
-    return parts
-      .map((part) => part[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
+    return parts.map((part) => part[0]).join('').slice(0, 2).toUpperCase();
   }, [entity.name, isCompact]);
 
-  const showImage =
-    Boolean(entity.imageUrl) && failedImageUrl !== entity.imageUrl;
+  const showImage = Boolean(entity.imageUrl) && failedImageUrl !== entity.imageUrl;
 
   return (
     <button
@@ -49,6 +45,7 @@ export function EntityCard({
         'group flex flex-col items-center justify-center gap-1',
         dragProps?.draggable && 'cursor-grab active:cursor-grabbing',
         isDragging && 'z-20 shadow-lg',
+        isSelected && 'ring-2 ring-primary ring-offset-1 ring-offset-background rounded-sm scale-105',
         className
       )}
       {...dragProps}

@@ -92,6 +92,7 @@ func (s *Server) setupRoutes() {
 			auth.GET("/google/callback", s.authHandler.GoogleCallback)
 			auth.POST("/refresh", s.authHandler.Refresh)
 			auth.POST("/logout", s.authHandler.Logout)
+			auth.POST("/guest", s.authHandler.GuestLogin)
 		}
 
 		optionalAuth := middleware.OptionalAuth(s.jwtService)

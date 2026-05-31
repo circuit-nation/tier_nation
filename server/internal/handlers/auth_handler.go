@@ -146,3 +146,13 @@ func (h *AuthHandler) Logout(ctx *gin.Context) {
 	ctx.SetCookie("refresh_token", "", -1, "/", "", false, true)
 	ctx.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
+
+// GuestLogin creates an anonymous guest session and returns a 24-hour JWT.
+func (h *AuthHandler) GuestLogin(ctx *gin.Context) {
+	token, err := h.authService.CreateGuestUser()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create guest session"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"accessToken": token})
+}

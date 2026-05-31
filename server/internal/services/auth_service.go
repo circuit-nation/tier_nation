@@ -143,3 +143,22 @@ func (s *AuthService) RefreshToken(refreshToken string) (string, error) {
 func (s *AuthService) DeleteSession(refreshToken string) error {
 	return s.db.Where("refresh_token = ?", refreshToken).Delete(&models.Session{}).Error
 }
+
+// CreateGuestUser creates a one-time guest User row and returns a signed JWT.
+func (s *AuthService) CreateGuestUser() (string, error) {
+	id := uuid.New()
+	user := models.User{
+		GoogleID:  "guest_" + id.String(),
+		Email:     "guest_" + id.String() + "@anon.local",
+		Name:      "Guest_" + id.String(),
+		AvatarURL: "",
+	}
+	if err := s.db.Create(&user).Error; err != nil {
+		return "", err
+	}
+	token, err := s.jwtService.GenerateToken(user.ID, user.Email)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
