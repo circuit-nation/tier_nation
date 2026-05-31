@@ -18,7 +18,7 @@ function isListClosed(list: List): boolean {
 export function LiveVotingCard({ list }: LiveVotingCardProps) {
   const isClosed = isListClosed(list);
   const hasSubmitted = list.userStatus?.hasSubmitted ?? false;
-  const href = hasSubmitted ? `/results/${list.id}` : `/voting/${list.id}`;
+  const href = (isClosed || hasSubmitted) ? `/results/${list.id}` : `/voting/${list.id}`;
 
   return (
     <section>

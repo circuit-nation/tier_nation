@@ -54,7 +54,15 @@ export function VotingListPreview({ list }: VotingListPreviewProps) {
   );
 
   const inner = isClosed ? (
-    <div className="block h-full cursor-not-allowed">{content}</div>
+    <Link
+      to={voteHref}
+      aria-disabled="true"
+      tabIndex={-1}
+      onClick={(e) => e.preventDefault()}
+      className="block h-full cursor-not-allowed"
+    >
+      {content}
+    </Link>
   ) : (
     <Link to={voteHref} className="group/link block h-full">
       {content}
