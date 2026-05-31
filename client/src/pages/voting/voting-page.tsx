@@ -7,7 +7,7 @@ import { useVoting } from '@/hooks/use-voting';
 import { EntityPool } from '@/pages/voting/components/entity-pool';
 import { TierBoard } from '@/pages/voting/components/tier-board';
 
-import { getRelativeTime } from '@/lib/utils';
+import { cn, getRelativeTime } from '@/lib/utils';
 import LiveIndicator from '@/components/ui/live-dot';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Vote } from '@/types';
@@ -90,7 +90,7 @@ export function VotingPage() {
   }
 
   return (
-    <div className="space-y-4 py-10 pb-28 sm:pb-40 px-5">
+    <div className={cn('space-y-4 py-10 px-5', pool.length > 0 && 'pb-28 sm:pb-40')}>
       <section className="space-y-10">
         <div className="space-y-3">
           <div className="*:flex-1 max-w-4xl text-center md:text-left space-y-4">

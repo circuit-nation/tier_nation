@@ -39,6 +39,8 @@ export function EntityPool({
   const [showRightGradient, setShowRightGradient] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
+  if (pool.length === 0) return null;
+
   const remainingCount = pool.filter((e) => !e.placed).length;
 
   const sortedPool = useMemo(() => {
